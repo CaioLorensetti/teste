@@ -10,6 +10,7 @@ Este documento apresenta a estrutura completa para desenvolvimento de uma API RE
 - **Propósito**: Especificação técnica detalhada
 - **Conteúdo**: 
   - Arquitetura do sistema (Clean Architecture)
+  - Código Limpo (Clean Code)
   - Modelos de dados e entidades
   - Endpoints da API com exemplos
   - Regras de negócio detalhadas
@@ -34,6 +35,15 @@ Este documento apresenta a estrutura completa para desenvolvimento de uma API RE
   - Checklist de implementação
 
 ## 🎯 Principais Características
+
+### Código Limpo (Clean Code)
+- **Código Limpo** escrever código legível e de simples manutenção no nível micro
+  - Nomes significativos - variáveis, funções e classes autodescritivas
+  - Funções pequenas - fazem apenas uma coisa bem feita
+  - Sem comentários desnecessários - o código deve ser autoexplicativo
+  - DRY (Don't Repeat Yourself) - evitar duplicação
+  - Tratamento de erros adequado
+  - Formatação consistente
 
 ### Arquitetura
 - **Clean Architecture** com separação clara de responsabilidades

@@ -3,8 +3,9 @@
 ## 📋 Visão Geral
 
 **Sistema**: API REST para gestão de solicitações de antecipação de valores  
-**Stack**: .NET Core 8.0 + SQLite (In-Memory)  
+**Stack**: C# + .NET Core 8.0 + SQLite (In-Memory)  
 **Arquitetura**: Clean Architecture + DDD  
+**Code**: Clean Code [Código Limpo](./00-Resumo-Executivo.md#codigo-limpo-clean-code)
 **Versionamento**: API v1  
 
 ## 🏗️ Arquitetura do Sistema
@@ -30,8 +31,66 @@
 │   └── Presentation/           # Controllers e configuração
 │       ├── Controllers/
 │       ├── Middleware/
-│       └── Program.cs
+│       ├── Program.cs
+│       └── appsettings.json    # Parametrizações globais
 ```
+## 🔧 Regras de Negócio Detalhadas
+
+### Validações de Entrada
+1. **Valor Mínimo**: R$ 100,00
+  - Deve ficar na parametrização global (appsettings.json)
+  - Assim se houver uma mudança futura, a regra estará em um lugar para mudança
+2. **Creator ID**: Obrigatório e válido
+3. **Data Solicitação**: Não pode ser futura
+4. **Solicitação Pendente**: Um creator só pode ter uma solicitação pendente
+
+### Cálculos
+- **Taxa Fixa**: 5% sobre o valor bruto
+  - Deve ficar na parametrização global (appsettings.json)
+  - Assim se houver uma mudança futura, a regra estará em um lugar para mudança
+- **Valor Líquido**: Valor solicitado - (Valor solicitado × 0.05)
+
+### Estados da Solicitação
+- **Pendente**: Estado inicial
+- **Aprovada**: Aprovada por administrador
+- **Recusada**: Recusada por administrador
+
+## 🏗️ RESTFull
+
+### Códigos HTTP Padrão
+- **200**: Sucesso
+- **201**: Criado com sucesso
+- **400**: Dados inválidos
+- **404**: Recurso não encontrado
+- **409**: Conflito (solicitação pendente existente)
+- **500**: Erro interno
+
+## 🔒 Segurança e Validações
+
+### Validações de Entrada
+- Validação de tipos de dados
+- Validação de ranges (valor mínimo)
+- Validação de formato (GUIDs, datas)
+- Sanitização de inputs
+
+### Middleware
+- Logging de requisições
+- Tratamento global de exceções
+- Validação de modelo automática
+- CORS configurado
+
+## 📈 Performance e Escalabilidade
+
+### Otimizações
+- Uso de async/await
+- Paginação nas listagens
+- Cache de configurações
+- Logs estruturados
+
+### Monitoramento
+- Health checks
+- Métricas de performance
+- Logs de auditoria
 
 ## 📊 Modelos de Dados
 
@@ -161,32 +220,7 @@ public class ValorMonetario
 }
 ```
 
-## 🔧 Regras de Negócio Detalhadas
 
-### Validações de Entrada
-1. **Valor Mínimo**: R$ 100,00
-2. **Creator ID**: Obrigatório e válido
-3. **Data Solicitação**: Não pode ser futura
-4. **Solicitação Pendente**: Um creator só pode ter uma solicitação pendente
-
-### Cálculos
-- **Taxa Fixa**: 5% sobre o valor bruto
-- **Valor Líquido**: Valor solicitado - (Valor solicitado × 0.05)
-
-### Estados da Solicitação
-- **Pendente**: Estado inicial
-- **Aprovada**: Aprovada por administrador
-- **Recusada**: Recusada por administrador
-
-## 🛡️ Tratamento de Erros
-
-### Códigos HTTP Padrão
-- **200**: Sucesso
-- **201**: Criado com sucesso
-- **400**: Dados inválidos
-- **404**: Recurso não encontrado
-- **409**: Conflito (solicitação pendente existente)
-- **500**: Erro interno
 
 ### Estrutura de Erro
 ```json
@@ -201,30 +235,3 @@ public class ValorMonetario
   }
 }
 ```
-
-## 🔒 Segurança e Validações
-
-### Validações de Entrada
-- Validação de tipos de dados
-- Validação de ranges (valor mínimo)
-- Validação de formato (GUIDs, datas)
-- Sanitização de inputs
-
-### Middleware
-- Logging de requisições
-- Tratamento global de exceções
-- Validação de modelo automática
-- CORS configurado
-
-## 📈 Performance e Escalabilidade
-
-### Otimizações
-- Uso de async/await
-- Paginação nas listagens
-- Cache de configurações
-- Logs estruturados
-
-### Monitoramento
-- Health checks
-- Métricas de performance
-- Logs de auditoria
