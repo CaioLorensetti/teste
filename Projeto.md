@@ -55,7 +55,7 @@ Versionamento da API (ex: /api/v1/...)
 Um README com instruções claras de como rodar o projeto localmente
 
 🌐 (Opcional) Frontend
-Se quiser demonstrar habilidades fullstack, você pode entregar uma interface simples em Angular ou React que permita:
+Se quiser demonstrar habilidades fullstack, você pode entregar uma interface simples em Angular que permita:
 
 Listar as solicitações existentes
 
