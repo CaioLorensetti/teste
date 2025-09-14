@@ -33,17 +33,16 @@ dotnet ef database update
 - **Body**:
 ```json
 {
-  "username": "usuario",
-  "email": "usuario@email.com",
+  "username": "mario@mbrothers.com",
+  "fullname": "Mario Brother",
   "password": "SenhaForte123!"
 }
 ```
 - **Response 201**:
 ```json
 {
-  "id": "guid",
-  "username": "usuario",
-  "email": "usuario@email.com"
+  "username": "mario@mbrothers.com",
+  "fullname": "Mario Brother",
 }
 ```
 ## Login Usuário:
@@ -52,7 +51,7 @@ dotnet ef database update
 - **Body**:
 ```json
 {
-  "username": "usuario",
+  "username": "mario@mbrothers.com",
   "password": "SenhaForte123!"
 }
 ```
