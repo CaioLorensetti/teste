@@ -484,6 +484,10 @@ FodyWeavers.xsd
   "AntecipacaoSettings": {
     "TaxaAntecipacao": 0.05,
     "ValorMinimo": 100.00
+  },
+  "DatabaseSettings": {
+    "UseSequentialIds": true,
+    "IdGenerationStrategy": "Identity"
   }
 }
 ```
@@ -500,6 +504,10 @@ FodyWeavers.xsd
   },
   "ConnectionStrings": {
     "DefaultConnection": "Data Source=antecipacao.db"
+  },
+  "DatabaseSettings": {
+    "UseSequentialIds": true,
+    "IdGenerationStrategy": "Identity"
   }
 }
 ```

@@ -167,8 +167,9 @@ namespace AntecipacaoAPI.Domain.Entities
 {
     public class SolicitacaoAntecipacao
     {
-        public Guid Id { get; private set; }
-        public Guid CreatorId { get; private set; }
+        public long Id { get; private set; }                    // ID sequencial único
+        public Guid GuidId { get; private set; }                // GUID para uso futuro (não utilizado por enquanto)
+        public long CreatorId { get; private set; }             // ID sequencial do creator
         public decimal ValorSolicitado { get; private set; }
         public decimal TaxaAplicada { get; private set; }
         public decimal ValorLiquido { get; private set; }
@@ -179,9 +180,10 @@ namespace AntecipacaoAPI.Domain.Entities
 
         private SolicitacaoAntecipacao() { }
 
-        public SolicitacaoAntecipacao(Guid creatorId, decimal valorSolicitado, DateTime dataSolicitacao)
+        public SolicitacaoAntecipacao(long creatorId, decimal valorSolicitado, DateTime dataSolicitacao)
         {
-            Id = Guid.NewGuid();
+            // Id será definido pelo banco de dados (Identity)
+            GuidId = Guid.NewGuid(); // Gerar GUID para uso futuro
             CreatorId = creatorId;
             ValorSolicitado = valorSolicitado;
             TaxaAplicada = 0.05m;
@@ -219,7 +221,7 @@ namespace AntecipacaoAPI.Application.DTOs
 {
     public class CriarSolicitacaoDto
     {
-        public Guid CreatorId { get; set; }
+        public long CreatorId { get; set; }
         public decimal ValorSolicitado { get; set; }
         public DateTime DataSolicitacao { get; set; }
     }
@@ -232,8 +234,9 @@ namespace AntecipacaoAPI.Application.DTOs
 {
     public class SolicitacaoResponseDto
     {
-        public Guid Id { get; set; }
-        public Guid CreatorId { get; set; }
+        public long Id { get; set; }
+        public Guid GuidId { get; set; }
+        public long CreatorId { get; set; }
         public decimal ValorSolicitado { get; set; }
         public decimal TaxaAplicada { get; set; }
         public decimal ValorLiquido { get; set; }
@@ -288,7 +291,7 @@ namespace AntecipacaoAPI.Application.Services
             return solicitacoes.Select(MapToResponseDto);
         }
 
-        public async Task<SolicitacaoResponseDto> AprovarAsync(Guid id)
+        public async Task<SolicitacaoResponseDto> AprovarAsync(long id)
         {
             var solicitacao = await _repository.ObterPorIdAsync(id);
             if (solicitacao == null)
@@ -300,7 +303,7 @@ namespace AntecipacaoAPI.Application.Services
             return MapToResponseDto(solicitacao);
         }
 
-        public async Task<SolicitacaoResponseDto> RecusarAsync(Guid id)
+        public async Task<SolicitacaoResponseDto> RecusarAsync(long id)
         {
             var solicitacao = await _repository.ObterPorIdAsync(id);
             if (solicitacao == null)
@@ -317,6 +320,7 @@ namespace AntecipacaoAPI.Application.Services
             return new SolicitacaoResponseDto
             {
                 Id = solicitacao.Id,
+                GuidId = solicitacao.GuidId,
                 CreatorId = solicitacao.CreatorId,
                 ValorSolicitado = solicitacao.ValorSolicitado,
                 TaxaAplicada = solicitacao.TaxaAplicada,
@@ -363,6 +367,17 @@ namespace AntecipacaoAPI.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<SolicitacaoAntecipacao> builder)
         {
             builder.HasKey(s => s.Id);
+            
+            // Configurar ID como Identity (auto-incremento)
+            builder.Property(s => s.Id)
+                   .ValueGeneratedOnAdd();
+            
+            // Configurar GuidId como único (para uso futuro)
+            builder.Property(s => s.GuidId)
+                   .IsRequired();
+            
+            builder.HasIndex(s => s.GuidId)
+                   .IsUnique();
             
             builder.Property(s => s.CreatorId)
                    .IsRequired();
@@ -434,14 +449,14 @@ namespace AntecipacaoAPI.Presentation.Controllers
 
         [HttpGet("creator/{creatorId}")]
         public async Task<ActionResult<IEnumerable<SolicitacaoResponseDto>>> ListarPorCreator(
-            Guid creatorId)
+            long creatorId)
         {
             var solicitacoes = await _service.ListarPorCreatorAsync(creatorId);
             return Ok(solicitacoes);
         }
 
         [HttpPut("{id}/aprovar")]
-        public async Task<ActionResult<SolicitacaoResponseDto>> AprovarSolicitacao(Guid id)
+        public async Task<ActionResult<SolicitacaoResponseDto>> AprovarSolicitacao(long id)
         {
             try
             {
@@ -455,7 +470,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpPut("{id}/recusar")]
-        public async Task<ActionResult<SolicitacaoResponseDto>> RecusarSolicitacao(Guid id)
+        public async Task<ActionResult<SolicitacaoResponseDto>> RecusarSolicitacao(long id)
         {
             try
             {
@@ -486,7 +501,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<SolicitacaoResponseDto>> ObterSolicitacao(Guid id)
+        public async Task<ActionResult<SolicitacaoResponseDto>> ObterSolicitacao(long id)
         {
             // Implementar se necessário
             return NotFound();

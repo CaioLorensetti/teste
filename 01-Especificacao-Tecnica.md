@@ -38,9 +38,9 @@
 
 ### Validações de Entrada
 1. **Valor Mínimo**: R$ 100,00
-  - Deve ficar na parametrização global (appsettings.json)
-  - Assim se houver uma mudança futura, a regra estará em um lugar para mudança
-2. **Creator ID**: Obrigatório e válido
+   - Deve ficar na parametrização global (appsettings.json)
+   - Assim se houver uma mudança futura, a regra estará em um lugar para mudança
+2. **Creator ID**: Obrigatório e válido (long > 0)
 3. **Data Solicitação**: Não pode ser futura
 4. **Solicitação Pendente**: Um creator só pode ter uma solicitação pendente
 
@@ -99,8 +99,9 @@
 ```csharp
 public class SolicitacaoAntecipacao
 {
-    public Guid Id { get; set; }
-    public Guid CreatorId { get; set; }
+    public long Id { get; set; }                    // ID sequencial único
+    public Guid GuidId { get; set; }                // GUID para uso futuro (não utilizado por enquanto)
+    public long CreatorId { get; set; }             // ID sequencial do creator
     public decimal ValorSolicitado { get; set; }
     public decimal TaxaAplicada { get; set; } = 0.05m; // 5%
     public decimal ValorLiquido { get; set; }
@@ -152,7 +153,7 @@ public class ValorMonetario
 - **Body**:
 ```json
 {
-  "creatorId": "guid",
+  "creatorId": 12345,
   "valorSolicitado": 1000.00,
   "dataSolicitacao": "2024-01-15T10:30:00Z"
 }
@@ -160,8 +161,9 @@ public class ValorMonetario
 - **Response 201**:
 ```json
 {
-  "id": "guid",
-  "creatorId": "guid",
+  "id": 1,
+  "guidId": "550e8400-e29b-41d4-a716-446655440000",
+  "creatorId": 12345,
   "valorSolicitado": 1000.00,
   "taxaAplicada": 0.05,
   "valorLiquido": 950.00,
@@ -176,8 +178,9 @@ public class ValorMonetario
 ```json
 [
   {
-    "id": "guid",
-    "creatorId": "guid",
+    "id": 1,
+    "guidId": "550e8400-e29b-41d4-a716-446655440000",
+    "creatorId": 12345,
     "valorSolicitado": 1000.00,
     "taxaAplicada": 0.05,
     "valorLiquido": 950.00,
@@ -192,7 +195,7 @@ public class ValorMonetario
 - **Response 200**:
 ```json
 {
-  "id": "guid",
+  "id": 1,
   "status": "Aprovada",
   "dataAprovacao": "2024-01-15T11:00:00Z"
 }
@@ -203,7 +206,7 @@ public class ValorMonetario
 - **Response 200**:
 ```json
 {
-  "id": "guid",
+  "id": 1,
   "status": "Recusada",
   "dataRecusa": "2024-01-15T11:00:00Z"
 }

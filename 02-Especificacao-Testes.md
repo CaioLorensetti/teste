@@ -51,7 +51,7 @@ public void ValorMonetario_ValorMenorQue100_DeveLancarExcecao()
 public void SolicitacaoAntecipacao_Criar_DeveInicializarComStatusPendente()
 {
     // Arrange
-    var creatorId = Guid.NewGuid();
+    var creatorId = 12345L;
     var valorSolicitado = 1000m;
     var dataSolicitacao = DateTime.UtcNow;
     
@@ -61,13 +61,15 @@ public void SolicitacaoAntecipacao_Criar_DeveInicializarComStatusPendente()
     // Assert
     solicitacao.Status.Should().Be(StatusSolicitacao.Pendente);
     solicitacao.ValorLiquido.Should().Be(950m);
+    solicitacao.CreatorId.Should().Be(12345L);
+    solicitacao.GuidId.Should().NotBeEmpty();
 }
 
 [Test]
 public void SolicitacaoAntecipacao_Aprovar_DeveAlterarStatusEAtualizarData()
 {
     // Arrange
-    var solicitacao = new SolicitacaoAntecipacao(Guid.NewGuid(), 1000m, DateTime.UtcNow);
+    var solicitacao = new SolicitacaoAntecipacao(12345L, 1000m, DateTime.UtcNow);
     
     // Act
     solicitacao.Aprovar();
@@ -90,7 +92,7 @@ public async Task CriarSolicitacao_ValorValido_DeveRetornarSolicitacaoCriada()
     var service = new AntecipacaoService(mockRepo.Object);
     var dto = new CriarSolicitacaoDto
     {
-        CreatorId = Guid.NewGuid(),
+        CreatorId = 12345L,
         ValorSolicitado = 1000m,
         DataSolicitacao = DateTime.UtcNow
     };
@@ -102,6 +104,8 @@ public async Task CriarSolicitacao_ValorValido_DeveRetornarSolicitacaoCriada()
     result.Should().NotBeNull();
     result.ValorLiquido.Should().Be(950m);
     result.Status.Should().Be(StatusSolicitacao.Pendente);
+    result.CreatorId.Should().Be(12345L);
+    result.GuidId.Should().NotBeEmpty();
 }
 
 [Test]
@@ -112,7 +116,7 @@ public async Task CriarSolicitacao_ValorMenorQue100_DeveLancarExcecao()
     var service = new AntecipacaoService(mockRepo.Object);
     var dto = new CriarSolicitacaoDto
     {
-        CreatorId = Guid.NewGuid(),
+        CreatorId = 12345L,
         ValorSolicitado = 50m,
         DataSolicitacao = DateTime.UtcNow
     };
@@ -126,7 +130,7 @@ public async Task CriarSolicitacao_ValorMenorQue100_DeveLancarExcecao()
 public async Task CriarSolicitacao_CreatorComSolicitacaoPendente_DeveLancarExcecao()
 {
     // Arrange
-    var creatorId = Guid.NewGuid();
+    var creatorId = 12345L;
     var mockRepo = new Mock<ISolicitacaoRepository>();
     mockRepo.Setup(x => x.ExisteSolicitacaoPendenteAsync(creatorId))
             .ReturnsAsync(true);
@@ -156,7 +160,7 @@ public async Task Post_CriarSolicitacao_DeveRetornar201ComDadosCorretos()
     var client = _factory.CreateClient();
     var request = new
     {
-        creatorId = Guid.NewGuid(),
+        creatorId = 12345L,
         valorSolicitado = 1000m,
         dataSolicitacao = DateTime.UtcNow
     };
@@ -170,6 +174,8 @@ public async Task Post_CriarSolicitacao_DeveRetornar201ComDadosCorretos()
     content.Should().NotBeNull();
     content.ValorLiquido.Should().Be(950m);
     content.Status.Should().Be("Pendente");
+    content.CreatorId.Should().Be(12345L);
+    content.GuidId.Should().NotBeEmpty();
 }
 
 [Test]
@@ -179,7 +185,7 @@ public async Task Post_CriarSolicitacao_ValorInvalido_DeveRetornar400()
     var client = _factory.CreateClient();
     var request = new
     {
-        creatorId = Guid.NewGuid(),
+        creatorId = 12345L,
         valorSolicitado = 50m, // Valor inválido
         dataSolicitacao = DateTime.UtcNow
     };
@@ -196,7 +202,7 @@ public async Task Get_ListarPorCreator_DeveRetornarSolicitacoes()
 {
     // Arrange
     var client = _factory.CreateClient();
-    var creatorId = Guid.NewGuid();
+    var creatorId = 12345L;
     
     // Criar uma solicitação primeiro
     await client.PostAsJsonAsync("/api/v1/antecipacao", new
@@ -220,7 +226,7 @@ public async Task Put_AprovarSolicitacao_DeveAlterarStatus()
 {
     // Arrange
     var client = _factory.CreateClient();
-    var creatorId = Guid.NewGuid();
+    var creatorId = 12345L;
     
     // Criar solicitação
     var createResponse = await client.PostAsJsonAsync("/api/v1/antecipacao", new
@@ -251,7 +257,7 @@ public async Task AdicionarAsync_DevePersistirSolicitacao()
     // Arrange
     var repository = new SolicitacaoRepository(_context);
     var solicitacao = new SolicitacaoAntecipacao(
-        Guid.NewGuid(), 
+        12345L, 
         1000m, 
         DateTime.UtcNow
     );
@@ -264,13 +270,15 @@ public async Task AdicionarAsync_DevePersistirSolicitacao()
     var persistida = await _context.Solicitacoes.FindAsync(solicitacao.Id);
     persistida.Should().NotBeNull();
     persistida.ValorLiquido.Should().Be(950m);
+    persistida.CreatorId.Should().Be(12345L);
+    persistida.GuidId.Should().NotBeEmpty();
 }
 
 [Test]
 public async Task ExisteSolicitacaoPendenteAsync_ComSolicitacaoPendente_DeveRetornarTrue()
 {
     // Arrange
-    var creatorId = Guid.NewGuid();
+    var creatorId = 12345L;
     var repository = new SolicitacaoRepository(_context);
     var solicitacao = new SolicitacaoAntecipacao(creatorId, 1000m, DateTime.UtcNow);
     await repository.AdicionarAsync(solicitacao);
@@ -301,7 +309,7 @@ public async Task CriarSolicitacao_1000Requisicoes_DeveCompletarEmMenosDe5Segund
     {
         var request = new
         {
-            creatorId = Guid.NewGuid(),
+            creatorId = 12345L + i,
             valorSolicitado = 1000m + i,
             dataSolicitacao = DateTime.UtcNow
         };
