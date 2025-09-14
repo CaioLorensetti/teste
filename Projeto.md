@@ -44,7 +44,7 @@ A taxa de antecipação é fixa: 5% sobre o valor bruto
 Toda solicitação deve iniciar com status "pendente"
 
 🧪 O que esperamos ver
-Código limpo, organizado e coeso
+**Código limpo, Clean Code**, organizado e coeso
 
 Testes automatizados (unitários ou de integração)
 
@@ -63,10 +63,10 @@ Criar uma nova solicitação (formulário)
 
 Aprovar ou recusar uma solicitação
 
-🧰 Stack Sugerida
-Backend: C# / .NET Core (ou stack de sua preferência)
+🧰 Stack
+Backend: C# / .NET Core
 
-Banco de dados: Em memória (ex: SQLite, ou mocks)
+Banco de dados: Em memória SQLite
 
 Testes: Framework de sua escolha
 
