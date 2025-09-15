@@ -3,74 +3,11 @@
 ## ⚠️ Warning
 -  The EF Core in-memory database is not designed for performance or robustness and should not be used outside of testing environments. It is not designed for production use.
 
-## 🚀 Setup Inicial do Projeto
-
-### 1. Criar Estrutura de Solução
-
-```bash
-# Criar solução
-dotnet new sln -n AntecipacaoAPI
-
-# Criar projetos
-dotnet new classlib -n AntecipacaoAPI.Domain
-dotnet new classlib -n AntecipacaoAPI.Application
-dotnet new classlib -n AntecipacaoAPI.Infrastructure
-dotnet new webapi -n AntecipacaoAPI.Presentation
-dotnet new xunit -n AntecipacaoAPI.Tests
-
-# Adicionar projetos à solução
-dotnet sln add AntecipacaoAPI.Domain
-dotnet sln add AntecipacaoAPI.Application
-dotnet sln add AntecipacaoAPI.Infrastructure
-dotnet sln add AntecipacaoAPI.Presentation
-dotnet sln add AntecipacaoAPI.Tests
-```
-
-### 2. Configurar Dependências
-
-#### Domain Layer (AntecipacaoAPI.Domain)
-```xml
-<!-- Nenhuma dependência externa necessária -->
-```
-
-#### Application Layer (AntecipacaoAPI.Application)
-```xml
-<PackageReference Include="FluentValidation" Version="11.8.1" />
-<PackageReference Include="MediatR" Version="12.2.0" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-```
-
-#### Infrastructure Layer (AntecipacaoAPI.Infrastructure)
-```xml
-<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
-```
-
-#### Presentation Layer (AntecipacaoAPI.Presentation)
-```xml
-<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
-<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
-<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-```
-
-#### Tests (AntecipacaoAPI.Tests)
-```xml
-<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
-<PackageReference Include="FluentAssertions" Version="6.12.0" />
-<PackageReference Include="Moq" Version="4.20.69" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-```
-
 ## 🏗️ Estrutura Detalhada de Arquivos
 
 ### Domain Layer
 ```
-AntecipacaoAPI.Domain/
+src/Domain/
 ├── Entities/
 │   ├── SolicitacaoAntecipacao.cs
 │   ├── User.cs
@@ -88,7 +25,7 @@ AntecipacaoAPI.Domain/
 
 ### Application Layer
 ```
-AntecipacaoAPI.Application/
+src/Application/
 ├── Services/
 │   ├── AntecipacaoService.cs
 │   └── AuthenticationService.cs
@@ -111,7 +48,7 @@ AntecipacaoAPI.Application/
 
 ### Infrastructure Layer
 ```
-AntecipacaoAPI.Infrastructure/
+src/Infrastructure/
 ├── Data/
 │   ├── AntecipacaoDbContext.cs
 │   └── Configurations/
@@ -124,7 +61,7 @@ AntecipacaoAPI.Infrastructure/
 
 ### Presentation Layer
 ```
-AntecipacaoAPI.Presentation/
+src/WebAPI/
 ├── Controllers/
 │   ├── AntecipacaoController.cs
 │   └── AuthController.cs
@@ -141,7 +78,7 @@ AntecipacaoAPI.Presentation/
 
 #### User.cs
 ```csharp
-namespace AntecipacaoAPI.Domain.Entities
+namespace Antecipacao.Domain.Entities
 {
     public class User
     {
@@ -157,7 +94,7 @@ namespace AntecipacaoAPI.Domain.Entities
 
 #### RefreshToken.cs
 ```csharp
-namespace AntecipacaoAPI.Domain.Entities
+namespace Antecipacao.Domain.Entities
 {
     public class RefreshToken
     {
@@ -182,7 +119,7 @@ namespace AntecipacaoAPI.Domain.Entities
 
 #### StatusSolicitacao.cs
 ```csharp
-namespace AntecipacaoAPI.Domain.Enums
+namespace Antecipacao.Domain.Enums
 {
     public enum StatusSolicitacao
     {
@@ -195,7 +132,7 @@ namespace AntecipacaoAPI.Domain.Enums
 
 #### ValorMonetario.cs
 ```csharp
-namespace AntecipacaoAPI.Domain.ValueObjects
+namespace Antecipacao.Domain.ValueObjects
 {
     public class ValorMonetario
     {
@@ -218,7 +155,7 @@ namespace AntecipacaoAPI.Domain.ValueObjects
 
 #### SolicitacaoAntecipacao.cs
 ```csharp
-namespace AntecipacaoAPI.Domain.Entities
+namespace Antecipacao.Domain.Entities
 {
     public class SolicitacaoAntecipacao
     {
@@ -272,7 +209,7 @@ namespace AntecipacaoAPI.Domain.Entities
 
 #### LoginRequest.cs
 ```csharp
-namespace AntecipacaoAPI.Application.DTOs
+namespace Antecipacao.Application.DTOs
 {
     public class LoginRequest
     {
@@ -284,7 +221,7 @@ namespace AntecipacaoAPI.Application.DTOs
 
 #### RegisterRequest.cs
 ```csharp
-namespace AntecipacaoAPI.Application.DTOs
+namespace Antecipacao.Application.DTOs
 {
     public class RegisterRequest
     {
@@ -296,7 +233,7 @@ namespace AntecipacaoAPI.Application.DTOs
 
 #### AuthenticationResponse.cs
 ```csharp
-namespace AntecipacaoAPI.Application.DTOs
+namespace Antecipacao.Application.DTOs
 {
     public class AuthenticationResponse
     {
@@ -310,7 +247,7 @@ namespace AntecipacaoAPI.Application.DTOs
 
 #### CriarSolicitacaoDto.cs
 ```csharp
-namespace AntecipacaoAPI.Application.DTOs
+namespace Antecipacao.Application.DTOs
 {
     public class CriarSolicitacaoDto
     {
@@ -323,7 +260,7 @@ namespace AntecipacaoAPI.Application.DTOs
 
 #### SolicitacaoResponseDto.cs
 ```csharp
-namespace AntecipacaoAPI.Application.DTOs
+namespace Antecipacao.Application.DTOs
 {
     public class SolicitacaoResponseDto
     {
@@ -342,7 +279,7 @@ namespace AntecipacaoAPI.Application.DTOs
 
 #### AntecipacaoService.cs
 ```csharp
-namespace AntecipacaoAPI.Application.Services
+namespace Antecipacao.Application.Services
 {
     public class AntecipacaoService : IAntecipacaoService
     {
@@ -430,7 +367,7 @@ namespace AntecipacaoAPI.Application.Services
 
 #### AntecipacaoDbContext.cs
 ```csharp
-namespace AntecipacaoAPI.Infrastructure.Data
+namespace Antecipacao.Infrastructure.Data
 {
     public class AntecipacaoDbContext : DbContext
     {
@@ -451,7 +388,7 @@ namespace AntecipacaoAPI.Infrastructure.Data
 
 #### SolicitacaoConfiguration.cs
 ```csharp
-namespace AntecipacaoAPI.Infrastructure.Data.Configurations
+namespace Antecipacao.Infrastructure.Data.Configurations
 {
     public class SolicitacaoConfiguration : IEntityTypeConfiguration<SolicitacaoAntecipacao>
     {
@@ -506,7 +443,7 @@ namespace AntecipacaoAPI.Infrastructure.Data.Configurations
 
 #### AuthController.cs
 ```csharp
-namespace AntecipacaoAPI.Presentation.Controllers
+namespace Antecipacao.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -634,7 +571,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
 
 #### AntecipacaoController.cs
 ```csharp
-namespace AntecipacaoAPI.Presentation.Controllers
+namespace Antecipacao.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
@@ -828,7 +765,7 @@ app.Run();
 
 ### TestBase.cs
 ```csharp
-namespace AntecipacaoAPI.Tests
+namespace Antecipacao.Tests
 {
     public class TestBase : IDisposable
     {
@@ -890,32 +827,3 @@ namespace AntecipacaoAPI.Tests
 - [ ] Documentar endpoints
 - [ ] Adicionar exemplos de uso
 - [ ] Configurar CI/CD (opcional)
-
-## 🚀 Comandos Úteis
-
-### Desenvolvimento
-```bash
-# Executar aplicação
-dotnet run --project AntecipacaoAPI.Presentation
-
-# Executar testes
-dotnet test
-
-# Executar testes com cobertura
-dotnet test --collect:"XPlat Code Coverage"
-
-# Restaurar dependências
-dotnet restore
-
-# Build da solução
-dotnet build
-```
-
-### Database
-```bash
-# Adicionar migration
-dotnet ef migrations add InitialCreate --project AntecipacaoAPI.Infrastructure --startup-project AntecipacaoAPI.Presentation
-
-# Atualizar database
-dotnet ef database update --project AntecipacaoAPI.Infrastructure --startup-project AntecipacaoAPI.Presentation
-```

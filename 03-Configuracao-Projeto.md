@@ -6,37 +6,37 @@
 ```bash
 #!/bin/bash
 
-echo "🚀 Criando solução AntecipacaoAPI..."
+echo "🚀 Criando solução Antecipacao..."
 
 # Criar solução
-dotnet new sln -n AntecipacaoAPI
+dotnet new sln -n Antecipacao -o src
 
 # Criar projetos
 echo "📁 Criando projetos..."
-dotnet new classlib -n AntecipacaoAPI.Domain
-dotnet new classlib -n AntecipacaoAPI.Application  
-dotnet new classlib -n AntecipacaoAPI.Infrastructure
-dotnet new webapi -n AntecipacaoAPI.Presentation
-dotnet new xunit -n AntecipacaoAPI.Tests
+dotnet new classlib -n Antecipacao.Domain -o src/Domain
+dotnet new classlib -n Antecipacao.Application -o src/Application
+dotnet new classlib -n Antecipacao.Infrastructure -o src/Infrastructure
+dotnet new webapi -n Antecipacao.WebAPI -o src/WebAPI
+dotnet new xunit -n Antecipacao.Tests -o src/Tests
 
 # Adicionar projetos à solução
 echo "🔗 Adicionando projetos à solução..."
-dotnet sln add AntecipacaoAPI.Domain
-dotnet sln add AntecipacaoAPI.Application
-dotnet sln add AntecipacaoAPI.Infrastructure
-dotnet sln add AntecipacaoAPI.Presentation
-dotnet sln add AntecipacaoAPI.Tests
+dotnet sln add src/Domain/Antecipacao.Domain.csproj
+dotnet sln add src/Application/Antecipacao.Application.csproj
+dotnet sln add src/Infrastructure/Antecipacao.Infrastructure.csproj
+dotnet sln add src/WebAPI/Antecipacao.WebAPI.csproj
+dotnet sln add src/Tests/Antecipacao.Tests.csproj
 
 # Configurar referências entre projetos
 echo "🔗 Configurando referências..."
-dotnet add AntecipacaoAPI.Application/AntecipacaoAPI.Application.csproj reference AntecipacaoAPI.Domain/AntecipacaoAPI.Domain.csproj
-dotnet add AntecipacaoAPI.Infrastructure/AntecipacaoAPI.Infrastructure.csproj reference AntecipacaoAPI.Domain/AntecipacaoAPI.Domain.csproj
-dotnet add AntecipacaoAPI.Infrastructure/AntecipacaoAPI.Infrastructure.csproj reference AntecipacaoAPI.Application/AntecipacaoAPI.Application.csproj
-dotnet add AntecipacaoAPI.Presentation/AntecipacaoAPI.Presentation.csproj reference AntecipacaoAPI.Application/AntecipacaoAPI.Application.csproj
-dotnet add AntecipacaoAPI.Presentation/AntecipacaoAPI.Presentation.csproj reference AntecipacaoAPI.Infrastructure/AntecipacaoAPI.Infrastructure.csproj
-dotnet add AntecipacaoAPI.Tests/AntecipacaoAPI.Tests.csproj reference AntecipacaoAPI.Presentation/AntecipacaoAPI.Presentation.csproj
-dotnet add AntecipacaoAPI.Tests/AntecipacaoAPI.Tests.csproj reference AntecipacaoAPI.Application/AntecipacaoAPI.Application.csproj
-dotnet add AntecipacaoAPI.Tests/AntecipacaoAPI.Tests.csproj reference AntecipacaoAPI.Infrastructure/AntecipacaoAPI.Infrastructure.csproj
+dotnet add src/Application/Antecipacao.Application.csproj reference src/Domain/Antecipacao.Domain.csproj
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj reference src/Domain/Antecipacao.Domain.csproj
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj reference src/Application/Antecipacao.Application.csproj
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj reference src/Application/Antecipacao.Application.csproj
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj reference src/Infrastructure/Antecipacao.Infrastructure.csproj
+dotnet add src/Tests/Antecipacao.Tests.csproj reference src/WebAPI/Antecipacao.WebAPI.csproj
+dotnet add src/Tests/Antecipacao.Tests.csproj reference src/Application/Antecipacao.Application.csproj
+dotnet add src/Tests/Antecipacao.Tests.csproj reference src/Infrastructure/Antecipacao.Infrastructure.csproj
 
 echo "✅ Solução criada com sucesso!"
 echo "📂 Estrutura de pastas:"
@@ -51,40 +51,36 @@ echo "📦 Instalando pacotes NuGet..."
 
 # Application Layer
 echo "Instalando pacotes para Application..."
-cd AntecipacaoAPI.Application
-dotnet add package FluentValidation --version 11.8.1
-dotnet add package MediatR --version 12.2.0
-dotnet add package Microsoft.Extensions.DependencyInjection.Abstractions --version 8.0.0
-cd ..
+dotnet add src/Application/Antecipacao.Application.csproj package FluentValidation --version 11.8.1
+dotnet add src/Application/Antecipacao.Application.csproj package MediatR --version 12.2.0
+dotnet add src/Application/Antecipacao.Application.csproj package Microsoft.Extensions.DependencyInjection.Abstractions --version 8.0.0
 
 # Infrastructure Layer
 echo "Instalando pacotes para Infrastructure..."
-cd AntecipacaoAPI.Infrastructure
-dotnet add package Microsoft.EntityFrameworkCore --version 8.0.0
-dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 8.0.0
-dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
-dotnet add package Microsoft.Extensions.Configuration.Abstractions --version 8.0.0
-dotnet add package BCrypt.Net-Next --version 4.0.3
-dotnet add package System.IdentityModel.Tokens.Jwt --version 7.0.3
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package Microsoft.EntityFrameworkCore --version 8.0.0
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package Microsoft.EntityFrameworkCore --version 8.0.0
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Sqlite --version 8.0.0
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package Microsoft.Extensions.Configuration.Abstractions --version 8.0.0
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package BCrypt.Net-Next --version 4.0.3
+dotnet add src/Infrastructure/Antecipacao.Infrastructure.csproj package System.IdentityModel.Tokens.Jwt --version 7.0.3
 cd ..
 
-# Presentation Layer
-echo "Instalando pacotes para Presentation..."
-cd AntecipacaoAPI.Presentation
-dotnet add package Microsoft.AspNetCore.OpenApi --version 8.0.0
-dotnet add package Swashbuckle.AspNetCore --version 6.5.0
-dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
-dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0
+# WebAPI Layer
+echo "Instalando pacotes para WebAPI..."
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj package Microsoft.AspNetCore.OpenApi --version 8.0.0
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj package Swashbuckle.AspNetCore --version 6.5.0
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj package Microsoft.EntityFrameworkCore.Design --version 8.0.0
+dotnet add src/WebAPI/Antecipacao.WebAPI.csproj package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0
 cd ..
 
 # Tests
 echo "Instalando pacotes para Tests..."
-cd AntecipacaoAPI.Tests
-dotnet add package Microsoft.AspNetCore.Mvc.Testing --version 8.0.0
-dotnet add package FluentAssertions --version 6.12.0
-dotnet add package Moq --version 4.20.69
-dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
-cd ..
+dotnet add src/Tests/Antecipacao.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.0
+dotnet add src/Tests/Antecipacao.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 8.0.0
+dotnet add src/Tests/Antecipacao.Tests.csproj package FluentAssertions --version 6.12.0
+dotnet add src/Tests/Antecipacao.Tests.csproj package Moq --version 4.20.69
+dotnet add src/Tests/Antecipacao.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
 
 echo "✅ Pacotes instalados com sucesso!"
 ```
@@ -549,7 +545,7 @@ chmod +x *.sh
 ### Desenvolvimento Diário
 ```bash
 # Executar aplicação
-dotnet run --project AntecipacaoAPI.Presentation
+dotnet run --project src/WebAPI/Antecipacao.WebAPI.csproj
 
 # Executar testes
 dotnet test
@@ -567,13 +563,13 @@ dotnet clean && dotnet build
 ### Database
 ```bash
 # Adicionar migration
-dotnet ef migrations add InitialCreate --project AntecipacaoAPI.Infrastructure --startup-project AntecipacaoAPI.Presentation
+dotnet ef migrations add InitialCreate --project src/Infrastructure/Antecipacao.Infrastructure.csproj --startup-project src/WebAPI/Antecipacao.WebAPI.csproj
 
 # Atualizar database
-dotnet ef database update --project AntecipacaoAPI.Infrastructure --startup-project AntecipacaoAPI.Presentation
+dotnet ef database update --project src/Infrastructure/Antecipacao.Infrastructure.csproj --startup-project src/WebAPI/Antecipacao.WebAPI.csproj
 
 # Remover migration
-dotnet ef migrations remove --project AntecipacaoAPI.Infrastructure --startup-project AntecipacaoAPI.Presentation
+dotnet ef migrations remove --project src/Infrastructure/Antecipacao.Infrastructure.csproj --startup-project src/WebAPI/Antecipacao.WebAPI.csproj
 ```
 
 ## 📊 Monitoramento e Logs
@@ -599,7 +595,7 @@ builder.Host.UseSerilog((context, configuration) =>
 ### VS Code Settings
 ```json
 {
-  "dotnet.defaultSolution": "AntecipacaoAPI.sln",
+  "dotnet.defaultSolution": "src/Antecipacao.sln",
   "omnisharp.enableRoslynAnalyzers": true,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
@@ -618,9 +614,9 @@ builder.Host.UseSerilog((context, configuration) =>
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/AntecipacaoAPI.Presentation/bin/Debug/net8.0/AntecipacaoAPI.Presentation.dll",
+      "program": "${workspaceFolder}/src/WebAPI/Antecipacao.WebAPI.csproj/bin/Debug/net8.0/Antecipacao.WebAPI.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/AntecipacaoAPI.Presentation",
+      "cwd": "${workspaceFolder}/src/WebAPI",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",

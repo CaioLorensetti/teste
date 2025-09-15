@@ -13,26 +13,33 @@
 ### Estrutura de Camadas (Clean Architecture)
 
 ```
-├── AntecipacaoAPI/
+├── src/
+│   ├── Antecipacao.sln
 │   ├── Domain/                 # Entidades e regras de negócio
 │   │   ├── Entities/
 │   │   ├── ValueObjects/
 │   │   ├── Enums/
 │   │   └── Interfaces/
+│   │   └── Antecipacao.Domain.csproj
 │   ├── Application/            # Casos de uso e serviços
 │   │   ├── Services/
 │   │   ├── DTOs/
 │   │   ├── Interfaces/
 │   │   └── Validators/
+│   │   └── Antecipacao.Application.csproj
 │   ├── Infrastructure/         # Implementações externas
 │   │   ├── Data/
 │   │   ├── Repositories/
 │   │   └── Configuration/
-│   └── Presentation/           # Controllers e configuração
-│       ├── Controllers/
-│       ├── Middleware/
-│       ├── Program.cs
-│       └── appsettings.json    # Parametrizações globais
+│   │   └── Antecipacao.Infrastructure.csproj
+│   ├── WebAPI/           # Controllers e configuração
+│   |   ├── Controllers/
+│   |   ├── Middleware/
+│   |   ├── Program.cs
+│   |   ├── appsettings.json    # Parametrizações globais
+│   |   └── Antecipacao.WebAPI.csproj
+│   └── Tests/
+│       └── Antecipacao.Tests.csproj
 ```
 ## 🔧 Regras de Negócio Detalhadas
 
