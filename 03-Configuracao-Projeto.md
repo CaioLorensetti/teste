@@ -92,16 +92,16 @@ echo "✅ Pacotes instalados com sucesso!"
 echo "🔨 Buildando solução..."
 
 # Restaurar dependências
-dotnet restore
+dotnet restore src/Antecipacao.sln
 
 # Build da solução
-dotnet build
+dotnet build src/Antecipacao.sln
 
 if [ $? -eq 0 ]; then
     echo "✅ Build realizado com sucesso!"
     
     echo "🧪 Executando testes..."
-    dotnet test --verbosity normal
+    dotnet test src/Antecipacao.sln --verbosity normal
     
     if [ $? -eq 0 ]; then
         echo "✅ Todos os testes passaram!"
@@ -466,7 +466,7 @@ FodyWeavers.xsd
 *.sln.iml
 ```
 
-### 2. appsettings.json
+### 2. src/WebAPI/appsettings.json
 ```json
 {
   "Logging": {
@@ -489,16 +489,16 @@ FodyWeavers.xsd
     "IdGenerationStrategy": "Identity"
   },
   "JwtSettings": {
-    "Secret": "YOUR-256-BIT-SECRET-KEY-HERE-KEEP-IT-SAFE",
-    "Issuer": "AntecipacaoAPI",
-    "Audience": "AntecipacaoAPIUsers",
+    "Secret": "uA3EBwUy5RkLS6QEm2Mu7T8+7j1Ki9IBU5SKzTyNWpE=",
+    "Issuer": "AntecipacaoWebAPI",
+    "Audience": "AntecipacaoWebAPIUsers",
     "AccessTokenExpirationMinutes": 15,
     "RefreshTokenExpirationDays": 7
   }
 }
 ```
 
-### 3. appsettings.Development.json
+### 3. src/WebAPI/appsettings.Development.json
 ```json
 {
   "Logging": {
@@ -516,9 +516,9 @@ FodyWeavers.xsd
     "IdGenerationStrategy": "Identity"
   },
   "JwtSettings": {
-    "Secret": "DEVELOPMENT-SECRET-KEY-NOT-FOR-PRODUCTION",
-    "Issuer": "AntecipacaoAPI-Dev",
-    "Audience": "AntecipacaoAPIUsers-Dev",
+    "Secret": "Z+0Zptxmv3yEnx1QjHPcr+NDdD6ZyUMZihjE4sSyKxY=",
+    "Issuer": "AntecipacaoWebAPI-Dev",
+    "Audience": "AntecipacaoWebAPIUsers-Dev",
     "AccessTokenExpirationMinutes": 60,
     "RefreshTokenExpirationDays": 30
   }
@@ -546,6 +546,8 @@ chmod +x *.sh
 ```bash
 # Executar aplicação
 dotnet run --project src/WebAPI/Antecipacao.WebAPI.csproj
+
+cd src/
 
 # Executar testes
 dotnet test
