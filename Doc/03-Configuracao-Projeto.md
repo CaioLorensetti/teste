@@ -466,6 +466,9 @@ FodyWeavers.xsd
 *.sln.iml
 ```
 
+## ⚠️ Warning
+-  The EF Core in-memory database is not designed for performance or robustness and should not be used outside of testing environments. It is not designed for production use.
+
 ### 2. ./src/WebAPI/appsettings.json
 ```json
 {

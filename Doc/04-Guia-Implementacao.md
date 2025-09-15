@@ -1,8 +1,3 @@
-# Guia de Implementação - API de Antecipação de Valores
-
-## ⚠️ Warning
--  The EF Core in-memory database is not designed for performance or robustness and should not be used outside of testing environments. It is not designed for production use.
-
 ## 🏗️ Estrutura Detalhada de Arquivos
 
 ### Domain Layer
