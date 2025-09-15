@@ -582,7 +582,7 @@ public async Task Put_AprovarSolicitacao_DeveAlterarStatus()
     var solicitacao = await createResponse.Content.ReadFromJsonAsync<SolicitacaoResponseDto>();
     
     // Act
-    var response = await client.PutAsync($"/api/v1/antecipacao/{solicitacao.Id}/aprovar", null);
+    var response = await client.PutAsync($"/api/v1/antecipacao/{solicitacao.GuidId}/aprovar", null);
     
     // Assert
     response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -611,7 +611,7 @@ public async Task AdicionarAsync_DevePersistirSolicitacao()
     await _context.SaveChangesAsync();
     
     // Assert
-    var persistida = await _context.Solicitacoes.FindAsync(solicitacao.Id);
+    var persistida = await _context.Solicitacoes.FirstOrDefaultAsync(s => s.GuidId == solicitacao.GuidId);
     persistida.Should().NotBeNull();
     persistida.ValorLiquido.Should().Be(950m);
     persistida.CreatorId.Should().Be(12345L);

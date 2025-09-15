@@ -204,14 +204,14 @@ public class ValorMonetario
 ```json
 {
   "username": "mario@mbrothers.com",
+  "fullname": "Mario Brother",
   "password": "SenhaForte123!"
 }
 ```
 - **Response 201**:
 ```json
 {
-  "message": "Registration successful",
-  "userId": 1
+  "message": "Registration successful"
 }
 ```
 
@@ -227,7 +227,6 @@ public class ValorMonetario
 - **Response 200**:
 ```json
 {
-  "id": 1,
   "username": "mario@mbrothers.com",
   "role": "User",
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -240,7 +239,6 @@ public class ValorMonetario
 - **Response 200**:
 ```json
 {
-  "id": 1,
   "username": "mario@mbrothers.com",
   "role": "User",
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -273,7 +271,6 @@ public class ValorMonetario
 - **Response 201**:
 ```json
 {
-  "id": 1,
   "guidId": "550e8400-e29b-41d4-a716-446655440000",
   "creatorId": 12345,
   "valorSolicitado": 1000.00,
@@ -291,7 +288,6 @@ public class ValorMonetario
 ```json
 [
   {
-    "id": 1,
     "guidId": "550e8400-e29b-41d4-a716-446655440000",
     "creatorId": 12345,
     "valorSolicitado": 1000.00,
@@ -304,24 +300,24 @@ public class ValorMonetario
 ```
 
 #### 3. Aprovar Solicitação
-- **PUT** `/api/v1/antecipacao/{id}/aprovar`
+- **PUT** `/api/v1/antecipacao/{guidId}/aprovar`
 - **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 {
-  "id": 1,
+  "guidId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "Aprovada",
   "dataAprovacao": "2024-01-15T11:00:00Z"
 }
 ```
 
 #### 4. Recusar Solicitação
-- **PUT** `/api/v1/antecipacao/{id}/recusar`
+- **PUT** `/api/v1/antecipacao/{guidId}/recusar`
 - **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 {
-  "id": 1,
+  "guidId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "Recusada",
   "dataRecusa": "2024-01-15T11:00:00Z"
 }

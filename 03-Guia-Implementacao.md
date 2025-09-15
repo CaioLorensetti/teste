@@ -300,7 +300,6 @@ namespace AntecipacaoAPI.Application.DTOs
 {
     public class AuthenticationResponse
     {
-        public long Id { get; set; }
         public string Username { get; set; }
         public string Role { get; set; }
         public string AccessToken { get; set; }
@@ -328,7 +327,6 @@ namespace AntecipacaoAPI.Application.DTOs
 {
     public class SolicitacaoResponseDto
     {
-        public long Id { get; set; }
         public Guid GuidId { get; set; }
         public long CreatorId { get; set; }
         public decimal ValorSolicitado { get; set; }
@@ -385,9 +383,9 @@ namespace AntecipacaoAPI.Application.Services
             return solicitacoes.Select(MapToResponseDto);
         }
 
-        public async Task<SolicitacaoResponseDto> AprovarAsync(long id)
+        public async Task<SolicitacaoResponseDto> AprovarAsync(Guid guidId)
         {
-            var solicitacao = await _repository.ObterPorIdAsync(id);
+            var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
             if (solicitacao == null)
                 throw new ArgumentException("Solicitação não encontrada");
 
@@ -397,9 +395,9 @@ namespace AntecipacaoAPI.Application.Services
             return MapToResponseDto(solicitacao);
         }
 
-        public async Task<SolicitacaoResponseDto> RecusarAsync(long id)
+        public async Task<SolicitacaoResponseDto> RecusarAsync(Guid guidId)
         {
-            var solicitacao = await _repository.ObterPorIdAsync(id);
+            var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
             if (solicitacao == null)
                 throw new ArgumentException("Solicitação não encontrada");
 
@@ -413,7 +411,6 @@ namespace AntecipacaoAPI.Application.Services
         {
             return new SolicitacaoResponseDto
             {
-                Id = solicitacao.Id,
                 GuidId = solicitacao.GuidId,
                 CreatorId = solicitacao.CreatorId,
                 ValorSolicitado = solicitacao.ValorSolicitado,
@@ -536,7 +533,6 @@ namespace AntecipacaoAPI.Presentation.Controllers
                 
                 return Ok(new
                 {
-                    response.Id,
                     response.Username,
                     response.Role,
                     response.AccessToken
@@ -553,8 +549,8 @@ namespace AntecipacaoAPI.Presentation.Controllers
         {
             try
             {
-                var user = await _authService.RegisterAsync(request);
-                return Ok(new { message = "Registration successful", userId = user.Id });
+                await _authService.RegisterAsync(request);
+                return Ok(new { message = "Registration successful" });
             }
             catch (ApplicationException ex)
             {
@@ -581,7 +577,6 @@ namespace AntecipacaoAPI.Presentation.Controllers
                 
                 return Ok(new
                 {
-                    response.Id,
                     response.Username,
                     response.Role,
                     response.AccessToken
@@ -660,7 +655,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
             try
             {
                 var result = await _service.CriarSolicitacaoAsync(dto);
-                return CreatedAtAction(nameof(ObterSolicitacao), new { id = result.Id }, result);
+                return CreatedAtAction(nameof(ObterSolicitacao), new { guidId = result.GuidId }, result);
             }
             catch (ArgumentException ex)
             {
@@ -681,13 +676,13 @@ namespace AntecipacaoAPI.Presentation.Controllers
             return Ok(solicitacoes);
         }
 
-        [HttpPut("{id}/aprovar")]
+        [HttpPut("{guidId}/aprovar")]
         [Authorize]
-        public async Task<ActionResult<SolicitacaoResponseDto>> AprovarSolicitacao(long id)
+        public async Task<ActionResult<SolicitacaoResponseDto>> AprovarSolicitacao(Guid guidId)
         {
             try
             {
-                var result = await _service.AprovarAsync(id);
+                var result = await _service.AprovarAsync(guidId);
                 return Ok(result);
             }
             catch (ArgumentException ex)
