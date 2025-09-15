@@ -1,4 +1,4 @@
-namespace Antecipacao.Application.DTOs
+namespace Antecipacao.Domain.DTOs
 {
     public class SolicitacaoResponseDto
     {

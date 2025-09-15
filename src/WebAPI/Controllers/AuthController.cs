@@ -1,5 +1,5 @@
-using Antecipacao.Application.DTOs;
-using Antecipacao.Application.Interfaces;
+using Antecipacao.Domain.DTOs;
+using Antecipacao.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,12 +22,12 @@ namespace Antecipacao.WebAPI.Controllers
             try
             {
                 var response = await _authService.AuthenticateAsync(request, GetIpAddress());
-                
+
                 if (response == null)
                     return BadRequest(new { message = "Username or password is incorrect" });
 
                 SetTokenCookie(response.RefreshToken);
-                
+
                 return Ok(new
                 {
                     response.Username,
@@ -63,7 +63,7 @@ namespace Antecipacao.WebAPI.Controllers
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            
+
             if (string.IsNullOrEmpty(refreshToken))
                 return BadRequest(new { message = "Refresh token is required" });
 
@@ -71,7 +71,7 @@ namespace Antecipacao.WebAPI.Controllers
             {
                 var response = await _authService.RefreshTokenAsync(refreshToken, GetIpAddress());
                 SetTokenCookie(response.RefreshToken);
-                
+
                 return Ok(new
                 {
                     response.Username,
@@ -94,14 +94,14 @@ namespace Antecipacao.WebAPI.Controllers
         public async Task<IActionResult> Logout()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            
+
             if (!string.IsNullOrEmpty(refreshToken))
             {
                 await _authService.RevokeTokenAsync(refreshToken, GetIpAddress());
             }
 
             Response.Cookies.Delete("refreshToken");
-            
+
             return Ok(new { message = "Logged out successfully" });
         }
 
@@ -114,7 +114,7 @@ namespace Antecipacao.WebAPI.Controllers
                 SameSite = SameSiteMode.Strict,
                 Secure = true // Usar HTTPS em produção
             };
-            
+
             Response.Cookies.Append("refreshToken", token, cookieOptions);
         }
 

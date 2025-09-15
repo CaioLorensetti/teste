@@ -1,5 +1,4 @@
-using Antecipacao.Application.DTOs;
-using Antecipacao.Application.Interfaces;
+using Antecipacao.Domain.DTOs;
 using Antecipacao.Domain.Entities;
 using Antecipacao.Domain.Interfaces;
 
@@ -27,8 +26,8 @@ namespace Antecipacao.Application.Services
 
             // Criar solicitação
             var solicitacao = new SolicitacaoAntecipacao(
-                dto.CreatorId, 
-                dto.ValorSolicitado, 
+                dto.CreatorId,
+                dto.ValorSolicitado,
                 dto.DataSolicitacao
             );
 

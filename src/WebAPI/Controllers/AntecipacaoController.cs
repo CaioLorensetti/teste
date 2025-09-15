@@ -1,5 +1,5 @@
-using Antecipacao.Application.DTOs;
-using Antecipacao.Application.Interfaces;
+using Antecipacao.Domain.DTOs;
+using Antecipacao.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,5 +1,5 @@
-using Antecipacao.Application.Interfaces;
 using Antecipacao.Application.Services;
+using Antecipacao.Domain.Interfaces;
 using Antecipacao.Infrastructure.Configuration;
 using Antecipacao.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

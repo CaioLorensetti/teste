@@ -1,4 +1,4 @@
-using Antecipacao.Application.DTOs;
+using Antecipacao.Domain.DTOs;
 using FluentValidation;
 
 namespace Antecipacao.Application.Validators

@@ -1,6 +1,6 @@
-using Antecipacao.Application.DTOs;
+using Antecipacao.Domain.DTOs;
 
-namespace Antecipacao.Application.Interfaces
+namespace Antecipacao.Domain.Interfaces
 {
     public interface IAntecipacaoService
     {
