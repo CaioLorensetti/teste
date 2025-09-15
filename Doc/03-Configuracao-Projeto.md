@@ -466,7 +466,7 @@ FodyWeavers.xsd
 *.sln.iml
 ```
 
-### 2. src/WebAPI/appsettings.json
+### 2. ./src/WebAPI/appsettings.json
 ```json
 {
   "Logging": {
@@ -498,7 +498,7 @@ FodyWeavers.xsd
 }
 ```
 
-### 3. src/WebAPI/appsettings.Development.json
+### 3. ./src/WebAPI/appsettings.Development.json
 ```json
 {
   "Logging": {
@@ -616,7 +616,7 @@ builder.Host.UseSerilog((context, configuration) =>
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/WebAPI/Antecipacao.WebAPI.csproj/bin/Debug/net8.0/Antecipacao.WebAPI.dll",
+      "program": "${workspaceFolder}/src/WebAPI/Antecipacao.WebAPI.csproj/bin/Debug/net9.0/Antecipacao.WebAPI.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/WebAPI",
       "stopAtEntry": false,
