@@ -17,6 +17,105 @@
 
 ### 1. Testes Unitários - Domain Layer
 
+#### User Entity
+```csharp
+[Test]
+public void User_Criar_DeveInicializarComDadosCorretos()
+{
+    // Arrange
+    var username = "test@example.com";
+    var passwordHash = "hashed_password";
+    
+    // Act
+    var user = new User
+    {
+        Username = username,
+        PasswordHash = passwordHash,
+        Role = "User",
+        CreatedAt = DateTime.UtcNow
+    };
+    
+    // Assert
+    user.Username.Should().Be(username);
+    user.PasswordHash.Should().Be(passwordHash);
+    user.Role.Should().Be("User");
+    user.RefreshTokens.Should().NotBeNull();
+    user.RefreshTokens.Should().BeEmpty();
+}
+
+[Test]
+public void User_AdicionarRefreshToken_DeveAdicionarToken()
+{
+    // Arrange
+    var user = new User { Username = "test@example.com" };
+    var refreshToken = new RefreshToken
+    {
+        Token = "test_token",
+        Expires = DateTime.UtcNow.AddDays(7),
+        Created = DateTime.UtcNow,
+        CreatedByIp = "127.0.0.1"
+    };
+    
+    // Act
+    user.RefreshTokens.Add(refreshToken);
+    
+    // Assert
+    user.RefreshTokens.Should().HaveCount(1);
+    user.RefreshTokens.First().Token.Should().Be("test_token");
+}
+```
+
+#### RefreshToken Entity
+```csharp
+[Test]
+public void RefreshToken_IsActive_QuandoValido_DeveRetornarTrue()
+{
+    // Arrange
+    var token = new RefreshToken
+    {
+        Token = "test_token",
+        Expires = DateTime.UtcNow.AddDays(1),
+        Created = DateTime.UtcNow,
+        Revoked = null
+    };
+    
+    // Act & Assert
+    token.IsActive.Should().BeTrue();
+}
+
+[Test]
+public void RefreshToken_IsActive_QuandoExpirado_DeveRetornarFalse()
+{
+    // Arrange
+    var token = new RefreshToken
+    {
+        Token = "test_token",
+        Expires = DateTime.UtcNow.AddDays(-1),
+        Created = DateTime.UtcNow.AddDays(-2),
+        Revoked = null
+    };
+    
+    // Act & Assert
+    token.IsActive.Should().BeFalse();
+}
+
+[Test]
+public void RefreshToken_IsActive_QuandoRevogado_DeveRetornarFalse()
+{
+    // Arrange
+    var token = new RefreshToken
+    {
+        Token = "test_token",
+        Expires = DateTime.UtcNow.AddDays(1),
+        Created = DateTime.UtcNow,
+        Revoked = DateTime.UtcNow
+    };
+    
+    // Act & Assert
+    token.IsActive.Should().BeFalse();
+}
+```
+
 #### ValorMonetario Value Object
 ```csharp
 [Test]
@@ -81,6 +180,106 @@ public void SolicitacaoAntecipacao_Aprovar_DeveAlterarStatusEAtualizarData()
 ```
 
 ### 2. Testes Unitários - Application Layer
+
+#### AuthenticationService
+```csharp
+[Test]
+public async Task AuthenticateAsync_CredenciaisValidas_DeveRetornarResponse()
+{
+    // Arrange
+    var mockContext = new Mock<ApplicationDbContext>();
+    var mockUsers = new Mock<DbSet<User>>();
+    var jwtSettings = new JwtSettings { Secret = "test_secret", Issuer = "test", Audience = "test" };
+    
+    var user = new User
+    {
+        Id = 1,
+        Username = "test@example.com",
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+        Role = "User"
+    };
+    
+    var users = new List<User> { user }.AsQueryable();
+    mockUsers.As<IQueryable<User>>().Setup(m => m.Provider).Returns(users.Provider);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.Expression).Returns(users.Expression);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.ElementType).Returns(users.ElementType);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.GetEnumerator()).Returns(users.GetEnumerator());
+    
+    mockContext.Setup(c => c.Users).Returns(mockUsers.Object);
+    
+    var service = new AuthenticationService(mockContext.Object, jwtSettings);
+    var request = new LoginRequest
+    {
+        Username = "test@example.com",
+        Password = "password123"
+    };
+    
+    // Act
+    var result = await service.AuthenticateAsync(request, "127.0.0.1");
+    
+    // Assert
+    result.Should().NotBeNull();
+    result.Username.Should().Be("test@example.com");
+    result.Role.Should().Be("User");
+    result.AccessToken.Should().NotBeNullOrEmpty();
+    result.RefreshToken.Should().NotBeNullOrEmpty();
+}
+
+[Test]
+public async Task AuthenticateAsync_CredenciaisInvalidas_DeveRetornarNull()
+{
+    // Arrange
+    var mockContext = new Mock<ApplicationDbContext>();
+    var jwtSettings = new JwtSettings { Secret = "test_secret", Issuer = "test", Audience = "test" };
+    
+    var service = new AuthenticationService(mockContext.Object, jwtSettings);
+    var request = new LoginRequest
+    {
+        Username = "invalid@example.com",
+        Password = "wrongpassword"
+    };
+    
+    // Act
+    var result = await service.AuthenticateAsync(request, "127.0.0.1");
+    
+    // Assert
+    result.Should().BeNull();
+}
+
+[Test]
+public async Task RegisterAsync_UsuarioNovo_DeveCriarUsuario()
+{
+    // Arrange
+    var mockContext = new Mock<ApplicationDbContext>();
+    var mockUsers = new Mock<DbSet<User>>();
+    var jwtSettings = new JwtSettings();
+    
+    var users = new List<User>().AsQueryable();
+    mockUsers.As<IQueryable<User>>().Setup(m => m.Provider).Returns(users.Provider);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.Expression).Returns(users.Expression);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.ElementType).Returns(users.ElementType);
+    mockUsers.As<IQueryable<User>>().Setup(m => m.GetEnumerator()).Returns(users.GetEnumerator());
+    
+    mockContext.Setup(c => c.Users).Returns(mockUsers.Object);
+    mockContext.Setup(c => c.Users.AnyAsync(It.IsAny<Expression<Func<User, bool>>>()))
+              .ReturnsAsync(false);
+    
+    var service = new AuthenticationService(mockContext.Object, jwtSettings);
+    var request = new RegisterRequest
+    {
+        Username = "newuser@example.com",
+        Password = "password123"
+    };
+    
+    // Act
+    var result = await service.RegisterAsync(request);
+    
+    // Assert
+    result.Should().NotBeNull();
+    result.Username.Should().Be("newuser@example.com");
+    result.PasswordHash.Should().NotBeNullOrEmpty();
+}
+```
 
 #### AntecipacaoService
 ```csharp
@@ -151,13 +350,139 @@ public async Task CriarSolicitacao_CreatorComSolicitacaoPendente_DeveLancarExcec
 
 ### 3. Testes de Integração - Controllers
 
-#### AntecipacaoController
+#### AuthController
 ```csharp
 [Test]
-public async Task Post_CriarSolicitacao_DeveRetornar201ComDadosCorretos()
+public async Task Post_Login_CredenciaisValidas_DeveRetornar200ComToken()
 {
     // Arrange
     var client = _factory.CreateClient();
+    var request = new
+    {
+        username = "test@example.com",
+        password = "password123"
+    };
+    
+    // Criar usuário primeiro
+    await client.PostAsJsonAsync("/api/auth/register", request);
+    
+    // Act
+    var response = await client.PostAsJsonAsync("/api/auth/login", request);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    var content = await response.Content.ReadFromJsonAsync<dynamic>();
+    content.Should().NotBeNull();
+    content.accessToken.Should().NotBeNullOrEmpty();
+}
+
+[Test]
+public async Task Post_Login_CredenciaisInvalidas_DeveRetornar400()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var request = new
+    {
+        username = "invalid@example.com",
+        password = "wrongpassword"
+    };
+    
+    // Act
+    var response = await client.PostAsJsonAsync("/api/auth/login", request);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+}
+
+[Test]
+public async Task Post_Register_UsuarioNovo_DeveRetornar200()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var request = new
+    {
+        username = "newuser@example.com",
+        password = "password123"
+    };
+    
+    // Act
+    var response = await client.PostAsJsonAsync("/api/auth/register", request);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    var content = await response.Content.ReadFromJsonAsync<dynamic>();
+    content.message.Should().Be("Registration successful");
+}
+
+[Test]
+public async Task Post_Register_UsuarioExistente_DeveRetornar400()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var request = new
+    {
+        username = "test@example.com",
+        password = "password123"
+    };
+    
+    // Criar usuário primeiro
+    await client.PostAsJsonAsync("/api/auth/register", request);
+    
+    // Act - Tentar criar novamente
+    var response = await client.PostAsJsonAsync("/api/auth/register", request);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+}
+
+[Test]
+public async Task Post_RefreshToken_TokenValido_DeveRetornar200ComNovoToken()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var loginRequest = new
+    {
+        username = "test@example.com",
+        password = "password123"
+    };
+    
+    // Fazer login para obter refresh token
+    var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
+    loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    
+    // Act
+    var response = await client.PostAsync("/api/auth/refresh-token", null);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    var content = await response.Content.ReadFromJsonAsync<dynamic>();
+    content.accessToken.Should().NotBeNullOrEmpty();
+}
+```
+
+#### AntecipacaoController
+```csharp
+[Test]
+public async Task Post_CriarSolicitacao_ComTokenValido_DeveRetornar201ComDadosCorretos()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    
+    // Fazer login para obter token
+    var loginRequest = new
+    {
+        username = "test@example.com",
+        password = "password123"
+    };
+    
+    await client.PostAsJsonAsync("/api/auth/register", loginRequest);
+    var loginResponse = await client.PostAsJsonAsync("/api/auth/login", loginRequest);
+    var loginContent = await loginResponse.Content.ReadFromJsonAsync<dynamic>();
+    
+    // Adicionar token ao header
+    client.DefaultRequestHeaders.Authorization = 
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginContent.accessToken.ToString());
+    
     var request = new
     {
         creatorId = 12345L,
@@ -176,6 +501,25 @@ public async Task Post_CriarSolicitacao_DeveRetornar201ComDadosCorretos()
     content.Status.Should().Be("Pendente");
     content.CreatorId.Should().Be(12345L);
     content.GuidId.Should().NotBeEmpty();
+}
+
+[Test]
+public async Task Post_CriarSolicitacao_SemToken_DeveRetornar401()
+{
+    // Arrange
+    var client = _factory.CreateClient();
+    var request = new
+    {
+        creatorId = 12345L,
+        valorSolicitado = 1000m,
+        dataSolicitacao = DateTime.UtcNow
+    };
+    
+    // Act
+    var response = await client.PostAsJsonAsync("/api/v1/antecipacao", request);
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 }
 
 [Test]

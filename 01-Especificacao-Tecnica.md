@@ -61,6 +61,8 @@
 - **200**: Sucesso
 - **201**: Criado com sucesso
 - **400**: Dados inválidos
+- **401**: Não autorizado (token inválido/expirado)
+- **403**: Acesso negado (sem permissão)
 - **404**: Recurso não encontrado
 - **409**: Conflito (solicitação pendente existente)
 - **500**: Erro interno
@@ -70,14 +72,17 @@
 ### Validações de Entrada
 - Validação de tipos de dados
 - Validação de ranges (valor mínimo)
-- Validação de formato (GUIDs, datas)
+- Validação de formato (emails, datas)
 - Sanitização de inputs
+- Validação de JWT tokens
 
 ### Middleware
 - Logging de requisições
 - Tratamento global de exceções
 - Validação de modelo automática
 - CORS configurado
+- JWT Authentication middleware
+- Refresh token validation
 
 ## 📈 Performance e Escalabilidade
 
@@ -91,6 +96,51 @@
 - Health checks
 - Métricas de performance
 - Logs de auditoria
+
+## 🔐 Autenticação e Autorização
+
+### Estratégia JWT com Refresh Tokens
+- **Access Token**: Curta duração (15 minutos)
+- **Refresh Token**: Longa duração (7 dias), armazenado em HttpOnly Cookie
+- **Senha**: Hash com BCrypt
+- **HTTPS**: Obrigatório em produção
+
+### Modelos de Autenticação
+
+#### Entidade: User
+```csharp
+public class User
+{
+    public long Id { get; set; }
+    public string Username { get; set; } // Email válido e único
+    public string PasswordHash { get; set; }
+    public string Role { get; set; } = "User";
+    public DateTime CreatedAt { get; set; }
+    public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+}
+```
+
+#### Entidade: RefreshToken
+```csharp
+public class RefreshToken
+{
+    public long Id { get; set; }
+    public string Token { get; set; }
+    public DateTime Expires { get; set; }
+    public DateTime Created { get; set; }
+    public string CreatedByIp { get; set; }
+    public DateTime? Revoked { get; set; }
+    public string RevokedByIp { get; set; }
+    public string ReplacedByToken { get; set; }
+    public string ReasonRevoked { get; set; }
+    public bool IsExpired => DateTime.UtcNow >= Expires;
+    public bool IsRevoked => Revoked != null;
+    public bool IsActive => !IsRevoked && !IsExpired;
+    
+    public long UserId { get; set; }
+    public User User { get; set; }
+}
+```
 
 ## 📊 Modelos de Dados
 
@@ -146,10 +196,72 @@ public class ValorMonetario
 
 ## 🌐 Endpoints da API
 
-### Base URL: `/api/v1/antecipacao`
+### Autenticação - Base URL: `/api/auth`
+
+#### 1. Registrar Usuário
+- **POST** `/api/auth/register`
+- **Body**:
+```json
+{
+  "username": "mario@mbrothers.com",
+  "password": "SenhaForte123!"
+}
+```
+- **Response 201**:
+```json
+{
+  "message": "Registration successful",
+  "userId": 1
+}
+```
+
+#### 2. Login Usuário
+- **POST** `/api/auth/login`
+- **Body**:
+```json
+{
+  "username": "mario@mbrothers.com",
+  "password": "SenhaForte123!"
+}
+```
+- **Response 200**:
+```json
+{
+  "id": 1,
+  "username": "mario@mbrothers.com",
+  "role": "User",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### 3. Refresh Token
+- **POST** `/api/auth/refresh-token`
+- **Headers**: Cookie: refreshToken
+- **Response 200**:
+```json
+{
+  "id": 1,
+  "username": "mario@mbrothers.com",
+  "role": "User",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### 4. Logout
+- **POST** `/api/auth/logout`
+- **Headers**: Authorization: Bearer {accessToken}
+- **Response 200**:
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+### Antecipação - Base URL: `/api/v1/antecipacao`
 
 #### 1. Criar Solicitação
 - **POST** `/api/v1/antecipacao`
+- **Headers**: Authorization: Bearer {accessToken}
 - **Body**:
 ```json
 {
@@ -174,6 +286,7 @@ public class ValorMonetario
 
 #### 2. Listar Solicitações por Creator
 - **GET** `/api/v1/antecipacao/creator/{creatorId}`
+- **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 [
@@ -192,6 +305,7 @@ public class ValorMonetario
 
 #### 3. Aprovar Solicitação
 - **PUT** `/api/v1/antecipacao/{id}/aprovar`
+- **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 {
@@ -203,6 +317,7 @@ public class ValorMonetario
 
 #### 4. Recusar Solicitação
 - **PUT** `/api/v1/antecipacao/{id}/recusar`
+- **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 {
@@ -214,6 +329,7 @@ public class ValorMonetario
 
 #### 5. Simular Antecipação (Opcional)
 - **GET** `/api/v1/antecipacao/simular?valor=1000.00`
+- **Headers**: Authorization: Bearer {accessToken}
 - **Response 200**:
 ```json
 {

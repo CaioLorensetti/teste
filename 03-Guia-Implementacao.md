@@ -46,6 +46,8 @@ dotnet sln add AntecipacaoAPI.Tests
 <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
 <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
 <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
 ```
 
 #### Presentation Layer (AntecipacaoAPI.Presentation)
@@ -53,6 +55,7 @@ dotnet sln add AntecipacaoAPI.Tests
 <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
 <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 ```
 
 #### Tests (AntecipacaoAPI.Tests)
@@ -69,13 +72,16 @@ dotnet sln add AntecipacaoAPI.Tests
 ```
 AntecipacaoAPI.Domain/
 ├── Entities/
-│   └── SolicitacaoAntecipacao.cs
+│   ├── SolicitacaoAntecipacao.cs
+│   ├── User.cs
+│   └── RefreshToken.cs
 ├── ValueObjects/
 │   └── ValorMonetario.cs
 ├── Enums/
 │   └── StatusSolicitacao.cs
 ├── Interfaces/
-│   └── ISolicitacaoRepository.cs
+│   ├── ISolicitacaoRepository.cs
+│   └── IAuthenticationService.cs
 └── Exceptions/
     └── BusinessException.cs
 ```
@@ -84,15 +90,21 @@ AntecipacaoAPI.Domain/
 ```
 AntecipacaoAPI.Application/
 ├── Services/
-│   └── AntecipacaoService.cs
+│   ├── AntecipacaoService.cs
+│   └── AuthenticationService.cs
 ├── DTOs/
 │   ├── CriarSolicitacaoDto.cs
 │   ├── SolicitacaoResponseDto.cs
-│   └── SimulacaoDto.cs
+│   ├── SimulacaoDto.cs
+│   ├── LoginRequest.cs
+│   ├── RegisterRequest.cs
+│   └── AuthenticationResponse.cs
 ├── Interfaces/
-│   └── IAntecipacaoService.cs
+│   ├── IAntecipacaoService.cs
+│   └── IAuthenticationService.cs
 ├── Validators/
-│   └── CriarSolicitacaoValidator.cs
+│   ├── CriarSolicitacaoValidator.cs
+│   └── LoginRequestValidator.cs
 └── Mappings/
     └── SolicitacaoMapping.cs
 ```
@@ -114,9 +126,11 @@ AntecipacaoAPI.Infrastructure/
 ```
 AntecipacaoAPI.Presentation/
 ├── Controllers/
-│   └── AntecipacaoController.cs
+│   ├── AntecipacaoController.cs
+│   └── AuthController.cs
 ├── Middleware/
-│   └── ExceptionHandlingMiddleware.cs
+│   ├── ExceptionHandlingMiddleware.cs
+│   └── JwtMiddleware.cs
 ├── Program.cs
 └── appsettings.json
 ```
@@ -124,6 +138,47 @@ AntecipacaoAPI.Presentation/
 ## 📝 Implementação Passo a Passo
 
 ### 1. Domain Layer - Entidades e Value Objects
+
+#### User.cs
+```csharp
+namespace AntecipacaoAPI.Domain.Entities
+{
+    public class User
+    {
+        public long Id { get; set; }
+        public string Username { get; set; } // Email válido e único
+        public string PasswordHash { get; set; }
+        public string Role { get; set; } = "User";
+        public DateTime CreatedAt { get; set; }
+        public List<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    }
+}
+```
+
+#### RefreshToken.cs
+```csharp
+namespace AntecipacaoAPI.Domain.Entities
+{
+    public class RefreshToken
+    {
+        public long Id { get; set; }
+        public string Token { get; set; }
+        public DateTime Expires { get; set; }
+        public DateTime Created { get; set; }
+        public string CreatedByIp { get; set; }
+        public DateTime? Revoked { get; set; }
+        public string RevokedByIp { get; set; }
+        public string ReplacedByToken { get; set; }
+        public string ReasonRevoked { get; set; }
+        public bool IsExpired => DateTime.UtcNow >= Expires;
+        public bool IsRevoked => Revoked != null;
+        public bool IsActive => !IsRevoked && !IsExpired;
+        
+        public long UserId { get; set; }
+        public User User { get; set; }
+    }
+}
+```
 
 #### StatusSolicitacao.cs
 ```csharp
@@ -214,6 +269,45 @@ namespace AntecipacaoAPI.Domain.Entities
 ```
 
 ### 2. Application Layer - Serviços e DTOs
+
+#### LoginRequest.cs
+```csharp
+namespace AntecipacaoAPI.Application.DTOs
+{
+    public class LoginRequest
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}
+```
+
+#### RegisterRequest.cs
+```csharp
+namespace AntecipacaoAPI.Application.DTOs
+{
+    public class RegisterRequest
+    {
+        public string Username { get; set; } // Email válido e único
+        public string Password { get; set; }
+    }
+}
+```
+
+#### AuthenticationResponse.cs
+```csharp
+namespace AntecipacaoAPI.Application.DTOs
+{
+    public class AuthenticationResponse
+    {
+        public long Id { get; set; }
+        public string Username { get; set; }
+        public string Role { get; set; }
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+    }
+}
+```
 
 #### CriarSolicitacaoDto.cs
 ```csharp
@@ -413,6 +507,136 @@ namespace AntecipacaoAPI.Infrastructure.Data.Configurations
 
 ### 4. Presentation Layer - Controllers
 
+#### AuthController.cs
+```csharp
+namespace AntecipacaoAPI.Presentation.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
+    {
+        private readonly IAuthenticationService _authService;
+
+        public AuthController(IAuthenticationService authService)
+        {
+            _authService = authService;
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                var response = await _authService.AuthenticateAsync(request, GetIpAddress());
+                
+                if (response == null)
+                    return BadRequest(new { message = "Username or password is incorrect" });
+
+                SetTokenCookie(response.RefreshToken);
+                
+                return Ok(new
+                {
+                    response.Id,
+                    response.Username,
+                    response.Role,
+                    response.AccessToken
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            try
+            {
+                var user = await _authService.RegisterAsync(request);
+                return Ok(new { message = "Registration successful", userId = user.Id });
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+            
+            if (string.IsNullOrEmpty(refreshToken))
+                return BadRequest(new { message = "Refresh token is required" });
+
+            try
+            {
+                var response = await _authService.RefreshTokenAsync(refreshToken, GetIpAddress());
+                SetTokenCookie(response.RefreshToken);
+                
+                return Ok(new
+                {
+                    response.Id,
+                    response.Username,
+                    response.Role,
+                    response.AccessToken
+                });
+            }
+            catch (SecurityException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+            
+            if (!string.IsNullOrEmpty(refreshToken))
+            {
+                await _authService.RevokeTokenAsync(refreshToken, GetIpAddress());
+            }
+
+            Response.Cookies.Delete("refreshToken");
+            
+            return Ok(new { message = "Logged out successfully" });
+        }
+
+        private void SetTokenCookie(string token)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(7),
+                SameSite = SameSiteMode.Strict,
+                Secure = true // Usar HTTPS em produção
+            };
+            
+            Response.Cookies.Append("refreshToken", token, cookieOptions);
+        }
+
+        private string GetIpAddress()
+        {
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+                return Request.Headers["X-Forwarded-For"];
+            else
+                return HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+        }
+    }
+}
+```
+
 #### AntecipacaoController.cs
 ```csharp
 namespace AntecipacaoAPI.Presentation.Controllers
@@ -429,6 +653,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<SolicitacaoResponseDto>> CriarSolicitacao(
             [FromBody] CriarSolicitacaoDto dto)
         {
@@ -448,6 +673,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpGet("creator/{creatorId}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<SolicitacaoResponseDto>>> ListarPorCreator(
             long creatorId)
         {
@@ -456,6 +682,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpPut("{id}/aprovar")]
+        [Authorize]
         public async Task<ActionResult<SolicitacaoResponseDto>> AprovarSolicitacao(long id)
         {
             try
@@ -470,6 +697,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpPut("{id}/recusar")]
+        [Authorize]
         public async Task<ActionResult<SolicitacaoResponseDto>> RecusarSolicitacao(long id)
         {
             try
@@ -484,6 +712,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpGet("simular")]
+        [Authorize]
         public ActionResult<SimulacaoDto> SimularAntecipacao([FromQuery] decimal valor)
         {
             if (valor <= 100)
@@ -501,6 +730,7 @@ namespace AntecipacaoAPI.Presentation.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<SolicitacaoResponseDto>> ObterSolicitacao(long id)
         {
             // Implementar se necessário
@@ -521,15 +751,54 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// JWT Settings
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.AddSingleton(jwtSettings);
+
 // Database
 builder.Services.AddDbContext<AntecipacaoDbContext>(options =>
     options.UseSqlite("Data Source=:memory:"));
+
+// Authentication JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = true;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.Secret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidateAudience = true,
+        ValidAudience = jwtSettings.Audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
 
 // Repositories
 builder.Services.AddScoped<ISolicitacaoRepository, SolicitacaoRepository>();
 
 // Services
 builder.Services.AddScoped<IAntecipacaoService, AntecipacaoService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 var app = builder.Build();
 
@@ -541,6 +810,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
+
+// JWT Middleware
+app.UseMiddleware<JwtMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

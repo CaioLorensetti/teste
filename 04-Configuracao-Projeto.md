@@ -64,6 +64,8 @@ dotnet add package Microsoft.EntityFrameworkCore --version 8.0.0
 dotnet add package Microsoft.EntityFrameworkCore.Sqlite --version 8.0.0
 dotnet add package Microsoft.EntityFrameworkCore.InMemory --version 8.0.0
 dotnet add package Microsoft.Extensions.Configuration.Abstractions --version 8.0.0
+dotnet add package BCrypt.Net-Next --version 4.0.3
+dotnet add package System.IdentityModel.Tokens.Jwt --version 7.0.3
 cd ..
 
 # Presentation Layer
@@ -72,6 +74,7 @@ cd AntecipacaoAPI.Presentation
 dotnet add package Microsoft.AspNetCore.OpenApi --version 8.0.0
 dotnet add package Swashbuckle.AspNetCore --version 6.5.0
 dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.0
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0
 cd ..
 
 # Tests
@@ -488,6 +491,13 @@ FodyWeavers.xsd
   "DatabaseSettings": {
     "UseSequentialIds": true,
     "IdGenerationStrategy": "Identity"
+  },
+  "JwtSettings": {
+    "Secret": "YOUR-256-BIT-SECRET-KEY-HERE-KEEP-IT-SAFE",
+    "Issuer": "AntecipacaoAPI",
+    "Audience": "AntecipacaoAPIUsers",
+    "AccessTokenExpirationMinutes": 15,
+    "RefreshTokenExpirationDays": 7
   }
 }
 ```
@@ -508,6 +518,13 @@ FodyWeavers.xsd
   "DatabaseSettings": {
     "UseSequentialIds": true,
     "IdGenerationStrategy": "Identity"
+  },
+  "JwtSettings": {
+    "Secret": "DEVELOPMENT-SECRET-KEY-NOT-FOR-PRODUCTION",
+    "Issuer": "AntecipacaoAPI-Dev",
+    "Audience": "AntecipacaoAPIUsers-Dev",
+    "AccessTokenExpirationMinutes": 60,
+    "RefreshTokenExpirationDays": 30
   }
 }
 ```
