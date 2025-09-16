@@ -1,0 +1,8 @@
+{
+    "dotnet.defaultSolution": "src/Antecipacao.sln",
+    "omnisharp.enableRoslynAnalyzers": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    }
+}
