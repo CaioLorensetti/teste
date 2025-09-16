@@ -1,4 +1,5 @@
 using Antecipacao.Domain.Interfaces;
+using Antecipacao.Domain.ValueObjects;
 using Antecipacao.Infrastructure.Data;
 using Antecipacao.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +16,13 @@ namespace Antecipacao.Infrastructure.Configuration
             services.AddDbContext<AntecipacaoDbContext>(options =>
                 options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
+            // JWT Settings
+            var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            services.AddSingleton(jwtSettings);
+
             // Repositories
             services.AddScoped<ISolicitacaoRepository, SolicitacaoRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }

@@ -96,17 +96,25 @@ namespace Antecipacao.Application.Services
             if (await _userRepository.ObterPorUsernameAsync(request.Username) != null)
                 throw new ApplicationException("Usuário já existe.");
 
-            var salt = Convert.ToBase64String(GenerateSalt());
+            //var salt = Convert.ToBase64String(GenerateSalt());
+            var hashPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            var salt = ExtraiSaltDoHash(hashPassword);
             var user = new User
             {
                 Username = request.Username,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, salt),
+                PasswordHash = hashPassword,
                 Salt = salt,
                 CreatedAt = DateTime.UtcNow,
                 Role = request.Role
             };
 
             await _userRepository.CriarAsync(user);
+        }
+
+        public static string ExtraiSaltDoHash(string bcryptHash)
+        {
+            // O salt são os primeiros 29 caracteres do hash
+            return bcryptHash.Substring(0, 29);
         }
 
         public RefreshToken GenerateRefreshToken(string ipAddress)
@@ -123,7 +131,7 @@ namespace Antecipacao.Application.Services
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
 
             var claims = new List<Claim>
             {

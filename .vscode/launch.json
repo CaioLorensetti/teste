@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch API",
+            "name": "Launch Antecipacao.WebAPI",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -16,7 +16,9 @@
             },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
-            }
+            },
+            "launchSettingsFilePath": "${workspaceFolder}/src/WebAPI/Properties/launchSettings.json",
+            "launchSettingsProfile": "Antecipacao.WebAPI"
         }
     ]
 }
