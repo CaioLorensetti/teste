@@ -1,9 +1,8 @@
 namespace Antecipacao.Domain.DTOs
 {
-    public class SolicitacaoResponseDto
+    public class MinhaSolicitacaoResponseDto
     {
         public Guid GuidId { get; set; }
-        public long CreatorId { get; set; }
         public decimal ValorSolicitado { get; set; }
         public decimal TaxaAplicada { get; set; }
         public decimal ValorLiquido { get; set; }

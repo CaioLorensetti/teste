@@ -5,12 +5,11 @@ namespace Antecipacao.Application.Mappings
 {
     public static class SolicitacaoMapping
     {
-        public static SolicitacaoResponseDto ToResponseDto(this SolicitacaoAntecipacao solicitacao)
+        public static MinhaSolicitacaoResponseDto ToResponseDto(this SolicitacaoAntecipacao solicitacao)
         {
-            return new SolicitacaoResponseDto
+            return new MinhaSolicitacaoResponseDto
             {
                 GuidId = solicitacao.GuidId,
-                CreatorId = solicitacao.CreatorId,
                 ValorSolicitado = solicitacao.ValorSolicitado,
                 TaxaAplicada = solicitacao.TaxaAplicada,
                 ValorLiquido = solicitacao.ValorLiquido,

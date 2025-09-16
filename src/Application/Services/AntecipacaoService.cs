@@ -13,7 +13,7 @@ namespace Antecipacao.Application.Services
             _repository = repository;
         }
 
-        public async Task<SolicitacaoResponseDto> CriarSolicitacaoAsync(CriarSolicitacaoDto dto)
+        public async Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(CriarSolicitacaoDto dto)
         {
             // Validar valor mínimo
             if (dto.ValorSolicitado <= 100)
@@ -37,13 +37,13 @@ namespace Antecipacao.Application.Services
             return MapToResponseDto(solicitacao);
         }
 
-        public async Task<IEnumerable<SolicitacaoResponseDto>> ListarPorCreatorAsync(long creatorId)
+        public async Task<IEnumerable<MinhaSolicitacaoResponseDto>> ListarPorCreatorAsync(long creatorId)
         {
             var solicitacoes = await _repository.ListarPorCreatorAsync(creatorId);
             return solicitacoes.Select(MapToResponseDto);
         }
 
-        public async Task<SolicitacaoResponseDto> AprovarAsync(Guid guidId)
+        public async Task<MinhaSolicitacaoResponseDto> AprovarAsync(Guid guidId)
         {
             var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
             if (solicitacao == null)
@@ -55,7 +55,7 @@ namespace Antecipacao.Application.Services
             return MapToResponseDto(solicitacao);
         }
 
-        public async Task<SolicitacaoResponseDto> RecusarAsync(Guid guidId)
+        public async Task<MinhaSolicitacaoResponseDto> RecusarAsync(Guid guidId)
         {
             var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
             if (solicitacao == null)
@@ -83,12 +83,11 @@ namespace Antecipacao.Application.Services
             });
         }
 
-        private static SolicitacaoResponseDto MapToResponseDto(SolicitacaoAntecipacao solicitacao)
+        private static MinhaSolicitacaoResponseDto MapToResponseDto(SolicitacaoAntecipacao solicitacao)
         {
-            return new SolicitacaoResponseDto
+            return new MinhaSolicitacaoResponseDto
             {
                 GuidId = solicitacao.GuidId,
-                CreatorId = solicitacao.CreatorId,
                 ValorSolicitado = solicitacao.ValorSolicitado,
                 TaxaAplicada = solicitacao.TaxaAplicada,
                 ValorLiquido = solicitacao.ValorLiquido,
