@@ -6,84 +6,105 @@ namespace Antecipacao.Application.Services
 {
     public class AntecipacaoService : IAntecipacaoService
     {
-        private readonly ISolicitacaoRepository _repository;
+        private readonly ISolicitacaoRepository _repositorioSolicitacao;
+        private const decimal VALOR_MINIMO_SOLICITACAO = 100m;
+        private const decimal TAXA_ANTECIPACAO = 0.05m;
 
-        public AntecipacaoService(ISolicitacaoRepository repository)
+        public AntecipacaoService(ISolicitacaoRepository repositorioSolicitacao)
         {
-            _repository = repository;
+            _repositorioSolicitacao = repositorioSolicitacao;
         }
 
         public async Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(CriarSolicitacaoDto dto)
         {
-            // Validar valor mínimo
-            if (dto.ValorSolicitado <= 100)
-                throw new ArgumentException("Valor deve ser maior que R$ 100,00");
+            ValidarValorMinimo(dto.ValorSolicitado);
+            await ValidarSolicitacaoPendente(dto.IdCriador);
 
-            // Verificar se já existe solicitação pendente
-            var existePendente = await _repository.ExisteSolicitacaoPendenteAsync(dto.CreatorId);
-            if (existePendente)
-                throw new InvalidOperationException("Creator já possui uma solicitação pendente");
+            var solicitacao = CriarNovaSolicitacao(dto);
+            await SalvarSolicitacao(solicitacao);
 
-            // Criar solicitação
-            var solicitacao = new SolicitacaoAntecipacao(
-                dto.CreatorId,
-                dto.ValorSolicitado,
-                dto.DataSolicitacao
-            );
-
-            await _repository.AdicionarAsync(solicitacao);
-            await _repository.SaveChangesAsync();
-
-            return MapToResponseDto(solicitacao);
+            return MapearResponseDto(solicitacao);
         }
 
-        public async Task<IEnumerable<MinhaSolicitacaoResponseDto>> ListarPorCreatorAsync(long creatorId)
+        public async Task<IEnumerable<MinhaSolicitacaoResponseDto>> ListarPorCreatorAsync(long idCreator)
         {
-            var solicitacoes = await _repository.ListarPorCreatorAsync(creatorId);
-            return solicitacoes.Select(MapToResponseDto);
+            var solicitacoes = await _repositorioSolicitacao.ListarPorCreatorAsync(idCreator);
+            return solicitacoes.Select(MapearResponseDto);
         }
 
         public async Task<MinhaSolicitacaoResponseDto> AprovarAsync(Guid guidId)
         {
-            var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
-            if (solicitacao == null)
-                throw new ArgumentException("Solicitação não encontrada");
-
+            var solicitacao = await ObterSolicitacaoPorId(guidId);
             solicitacao.Aprovar();
-            await _repository.SaveChangesAsync();
+            await _repositorioSolicitacao.SaveChangesAsync();
 
-            return MapToResponseDto(solicitacao);
+            return MapearResponseDto(solicitacao);
         }
 
         public async Task<MinhaSolicitacaoResponseDto> RecusarAsync(Guid guidId)
         {
-            var solicitacao = await _repository.ObterPorGuidIdAsync(guidId);
-            if (solicitacao == null)
-                throw new ArgumentException("Solicitação não encontrada");
-
+            var solicitacao = await ObterSolicitacaoPorId(guidId);
             solicitacao.Recusar();
-            await _repository.SaveChangesAsync();
+            await _repositorioSolicitacao.SaveChangesAsync();
 
-            return MapToResponseDto(solicitacao);
+            return MapearResponseDto(solicitacao);
         }
 
         public Task<SimulacaoDto> SimularAntecipacaoAsync(decimal valor)
         {
-            if (valor <= 100)
-                throw new ArgumentException("Valor deve ser maior que R$ 100,00");
-
-            var taxa = 0.05m;
-            var valorLiquido = valor - (valor * taxa);
-
-            return Task.FromResult(new SimulacaoDto
-            {
-                ValorSolicitado = valor,
-                TaxaAplicada = taxa,
-                ValorLiquido = valorLiquido
-            });
+            ValidarValorMinimo(valor);
+            var simulacao = CalcularSimulacao(valor);
+            return Task.FromResult(simulacao);
         }
 
-        private static MinhaSolicitacaoResponseDto MapToResponseDto(SolicitacaoAntecipacao solicitacao)
+        private void ValidarValorMinimo(decimal valor)
+        {
+            if (valor <= VALOR_MINIMO_SOLICITACAO)
+                throw new ArgumentException($"Valor deve ser maior que R$ {VALOR_MINIMO_SOLICITACAO:F2}");
+        }
+
+        private async Task ValidarSolicitacaoPendente(long idCreator)
+        {
+            var existePendente = await _repositorioSolicitacao.ExisteSolicitacaoPendenteAsync(idCreator);
+            if (existePendente)
+                throw new InvalidOperationException("Usuário já possui uma solicitação pendente");
+        }
+
+        private SolicitacaoAntecipacao CriarNovaSolicitacao(CriarSolicitacaoDto dto)
+        {
+            return new SolicitacaoAntecipacao(
+                dto.IdCriador,
+                dto.ValorSolicitado,
+                dto.DataSolicitacao
+            );
+        }
+
+        private async Task SalvarSolicitacao(SolicitacaoAntecipacao solicitacao)
+        {
+            await _repositorioSolicitacao.AdicionarAsync(solicitacao);
+            await _repositorioSolicitacao.SaveChangesAsync();
+        }
+
+        private async Task<SolicitacaoAntecipacao> ObterSolicitacaoPorId(Guid guidId)
+        {
+            var solicitacao = await _repositorioSolicitacao.ObterPorGuidIdAsync(guidId);
+            if (solicitacao == null)
+                throw new ArgumentException("Solicitação não encontrada");
+            return solicitacao;
+        }
+
+        private SimulacaoDto CalcularSimulacao(decimal valor)
+        {
+            var valorLiquido = valor - (valor * TAXA_ANTECIPACAO);
+            return new SimulacaoDto
+            {
+                ValorSolicitado = valor,
+                TaxaAplicada = TAXA_ANTECIPACAO,
+                ValorLiquido = valorLiquido
+            };
+        }
+
+        private static MinhaSolicitacaoResponseDto MapearResponseDto(SolicitacaoAntecipacao solicitacao)
         {
             return new MinhaSolicitacaoResponseDto
             {

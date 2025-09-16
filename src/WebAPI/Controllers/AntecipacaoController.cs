@@ -10,21 +10,21 @@ namespace Antecipacao.WebAPI.Controllers
     [Route("api/v1/[controller]")]
     public class AntecipacaoController : ControllerBase
     {
-        private readonly IAntecipacaoService _service;
+        private readonly IAntecipacaoService _servicoAntecipacao;
 
-        public AntecipacaoController(IAntecipacaoService service)
+        public AntecipacaoController(IAntecipacaoService servicoAntecipacao)
         {
-            _service = service;
+            _servicoAntecipacao = servicoAntecipacao;
         }
 
-        private long GetCurrentUserId()
+        private long ObterIdUsuarioAtual()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !long.TryParse(userIdClaim.Value, out long userId))
+            var claimIdUsuario = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claimIdUsuario == null || !long.TryParse(claimIdUsuario.Value, out long idUsuario))
             {
                 throw new UnauthorizedAccessException("Token inválido ou usuário não identificado.");
             }
-            return userId;
+            return idUsuario;
         }
 
         [HttpPost]
@@ -34,22 +34,23 @@ namespace Antecipacao.WebAPI.Controllers
         {
             try
             {
-                var creatorId = GetCurrentUserId();
-                dto.CreatorId = creatorId; // Definir o CreatorId do token
-                var result = await _service.CriarSolicitacaoAsync(dto);
-                return CreatedAtAction(nameof(ObterSolicitacao), new { guidId = result.GuidId }, result);
+                var idUsuario = ObterIdUsuarioAtual();
+                dto.IdCriador = idUsuario;
+                
+                var solicitacaoCriada = await _servicoAntecipacao.CriarSolicitacaoAsync(dto);
+                return CreatedAtAction(nameof(ObterSolicitacao), new { guidId = solicitacaoCriada.GuidId }, solicitacaoCriada);
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new { error = ex.Message });
+                return Unauthorized(new { erro = ex.Message });
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new { erro = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(new { error = ex.Message });
+                return Conflict(new { erro = ex.Message });
             }
         }
 
@@ -59,13 +60,13 @@ namespace Antecipacao.WebAPI.Controllers
         {
             try
             {
-                var creatorId = GetCurrentUserId();
-                var solicitacoes = await _service.ListarPorCreatorAsync(creatorId);
+                var idUsuario = ObterIdUsuarioAtual();
+                var solicitacoes = await _servicoAntecipacao.ListarPorCreatorAsync(idUsuario);
                 return Ok(solicitacoes);
             }
             catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized(new { error = ex.Message });
+                return Unauthorized(new { erro = ex.Message });
             }
         }
 
@@ -75,12 +76,12 @@ namespace Antecipacao.WebAPI.Controllers
         {
             try
             {
-                var result = await _service.AprovarAsync(guidId);
-                return Ok(result);
+                var solicitacaoAprovada = await _servicoAntecipacao.AprovarAsync(guidId);
+                return Ok(solicitacaoAprovada);
             }
             catch (ArgumentException ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { erro = ex.Message });
             }
         }
 
@@ -90,12 +91,12 @@ namespace Antecipacao.WebAPI.Controllers
         {
             try
             {
-                var result = await _service.RecusarAsync(guidId);
-                return Ok(result);
+                var solicitacaoRecusada = await _servicoAntecipacao.RecusarAsync(guidId);
+                return Ok(solicitacaoRecusada);
             }
             catch (ArgumentException ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { erro = ex.Message });
             }
         }
 
@@ -105,12 +106,12 @@ namespace Antecipacao.WebAPI.Controllers
         {
             try
             {
-                var result = await _service.SimularAntecipacaoAsync(valor);
-                return Ok(result);
+                var simulacao = await _servicoAntecipacao.SimularAntecipacaoAsync(valor);
+                return Ok(simulacao);
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new { erro = ex.Message });
             }
         }
 
@@ -118,7 +119,6 @@ namespace Antecipacao.WebAPI.Controllers
         [Authorize]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> ObterSolicitacao(Guid guidId)
         {
-            // Implementar se necessário
             return NotFound();
         }
     }

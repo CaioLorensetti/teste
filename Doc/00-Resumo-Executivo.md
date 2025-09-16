@@ -44,6 +44,7 @@ Este documento apresenta a estrutura completa para desenvolvimento de uma API RE
   - DRY (Don't Repeat Yourself) - evitar duplicação
   - Tratamento de erros adequado
   - Formatação consistente
+  - Padronizar a linguagem do sistemas, classes, variáveis, métodos, tudo em Português
 
 ### Arquitetura
 - **Clean Architecture** com separação clara de responsabilidades

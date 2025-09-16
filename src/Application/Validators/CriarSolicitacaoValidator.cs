@@ -7,10 +7,6 @@ namespace Antecipacao.Application.Validators
     {
         public CriarSolicitacaoValidator()
         {
-            RuleFor(x => x.CreatorId)
-                .GreaterThan(0)
-                .WithMessage("Creator ID deve ser maior que zero");
-
             RuleFor(x => x.ValorSolicitado)
                 .GreaterThan(100)
                 .WithMessage("Valor deve ser maior que R$ 100,00");
