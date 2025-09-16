@@ -38,6 +38,9 @@ nunit-*.xml
 
 # .NET Core
 project.lock.json
+
+# SQLite
+*.db
 project.fragment.lock.json
 artifacts/
 
