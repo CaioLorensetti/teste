@@ -96,16 +96,16 @@ namespace Antecipacao.Application.Services
             if (await _userRepository.ObterPorUsernameAsync(request.Username) != null)
                 throw new ApplicationException("Usuário já existe.");
 
-            //var salt = Convert.ToBase64String(GenerateSalt());
             var hashPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
             var salt = ExtraiSaltDoHash(hashPassword);
             var user = new User
             {
+                Fullname = request.Fullname,
                 Username = request.Username,
                 PasswordHash = hashPassword,
                 Salt = salt,
                 CreatedAt = DateTime.UtcNow,
-                Role = request.Role
+                Role = UserRole.User
             };
 
             await _userRepository.CriarAsync(user);
@@ -171,7 +171,7 @@ namespace Antecipacao.Application.Services
                 return false;
 
             // Revogar token e descendentes
-            RevokeRefreshToken(refreshToken, ipAddress, "Revoked without replacement");
+            RevokeRefreshToken(refreshToken, ipAddress, "Revogar token para logout");
             await _userRepository.AtualizarAsync(user);
 
             return true;
@@ -213,7 +213,7 @@ namespace Antecipacao.Application.Services
             var user = await _userRepository.ObterPorRefreshTokenAsync(token);
 
             if (user == null)
-                throw new SecurityException("Invalid token");
+                throw new SecurityException("Token inválido");
 
             return user;
         }
@@ -224,14 +224,6 @@ namespace Antecipacao.Application.Services
             user.RefreshTokens.RemoveAll(x =>
                 !x.IsActive &&
                 x.Created.AddDays(_jwtSettings.RefreshTokenExpirationDays + 2) <= DateTime.UtcNow);
-        }
-
-        private static byte[] GenerateSalt(int size = 16)
-        {
-            byte[] salt = new byte[size];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(salt);
-            return salt;
         }
     }
 }

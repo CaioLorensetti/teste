@@ -7,9 +7,12 @@ namespace Antecipacao.Application.Validators
     {
         public RegisterRequestValidator()
         {
+            RuleFor(x => x.Fullname)
+                .NotEmpty().WithMessage("Nome completo é obrigatório");
+
             RuleFor(x => x.Username)
-                .NotEmpty().WithMessage("Username é obrigatório")
-                .EmailAddress().WithMessage("Username deve ser um email válido");
+                .NotEmpty().WithMessage("Usuário é obrigatório")
+                .EmailAddress().WithMessage("Usuário deve ser um email válido");
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Senha é obrigatória")

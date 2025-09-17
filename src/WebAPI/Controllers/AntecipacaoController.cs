@@ -28,7 +28,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> CriarSolicitacao(
             [FromBody] CriarSolicitacaoDto dto)
         {
@@ -36,9 +36,9 @@ namespace Antecipacao.WebAPI.Controllers
             {
                 var idUsuario = ObterIdUsuarioAtual();
                 dto.IdCriador = idUsuario;
-                
+
                 var solicitacaoCriada = await _servicoAntecipacao.CriarSolicitacaoAsync(dto);
-                return CreatedAtAction(nameof(ObterSolicitacao), new { guidId = solicitacaoCriada.GuidId }, solicitacaoCriada);
+                return CreatedAtAction(nameof(CriarSolicitacao), new { guidId = solicitacaoCriada.GuidId }, solicitacaoCriada);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -55,7 +55,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpGet("minhas-solicitacoes")]
-        [Authorize]
+        [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<IEnumerable<MinhaSolicitacaoResponseDto>>> ListarMinhasSolicitacoes()
         {
             try
@@ -71,7 +71,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpPut("{guidId}/aprovar")]
-        [Authorize]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> AprovarSolicitacao(Guid guidId)
         {
             try
@@ -86,7 +86,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpPut("{guidId}/recusar")]
-        [Authorize]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> RecusarSolicitacao(Guid guidId)
         {
             try
@@ -101,7 +101,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpGet("simular")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<ActionResult<SimulacaoDto>> SimularAntecipacao([FromQuery] decimal valor)
         {
             try
@@ -115,11 +115,19 @@ namespace Antecipacao.WebAPI.Controllers
             }
         }
 
-        [HttpGet("{guidId}")]
-        [Authorize]
-        public async Task<ActionResult<MinhaSolicitacaoResponseDto>> ObterSolicitacao(Guid guidId)
+        [HttpGet("admin/solicitacoes-usuario/{userId}")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<ActionResult<IEnumerable<MinhaSolicitacaoResponseDto>>> ListarSolicitacoesPorUsuario(long userId)
         {
-            return NotFound();
+            try
+            {
+                var solicitacoes = await _servicoAntecipacao.ListarPorCreatorAsync(userId);
+                return Ok(solicitacoes);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { erro = ex.Message });
+            }
         }
     }
 }
