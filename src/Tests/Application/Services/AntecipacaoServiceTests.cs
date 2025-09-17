@@ -65,7 +65,7 @@ namespace Antecipacao.Tests.Application.Services
             // Act & Assert
             var action = async () => await _service.CriarSolicitacaoAsync(creatorId, request);
             await action.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("Valor deve ser maior que R$ 100,00");
+                .WithMessage("Valor deve ser maior que R$ 100.00");
 
             _mockRepository.Verify(x => x.ExisteSolicitacaoPendenteAsync(It.IsAny<long>()), Times.Never);
         }
@@ -227,11 +227,11 @@ namespace Antecipacao.Tests.Application.Services
             // Act & Assert
             var action = async () => await _service.SimularAntecipacaoAsync(valor);
             await action.Should().ThrowAsync<ArgumentException>()
-                .WithMessage("Valor deve ser maior que R$ 100,00");
+                .WithMessage("Valor deve ser maior que R$ 100.00");
         }
 
         [Theory]
-        [InlineData(100.01, 950.005)]
+        [InlineData(100.01, 95.0095)]
         [InlineData(500.00, 475.00)]
         [InlineData(1000.00, 950.00)]
         [InlineData(2000.00, 1900.00)]

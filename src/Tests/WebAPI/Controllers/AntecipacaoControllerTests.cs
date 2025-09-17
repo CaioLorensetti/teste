@@ -91,9 +91,6 @@ namespace Antecipacao.Tests.WebAPI.Controllers
             var response = okResult!.Value;
 
             response.Should().NotBeNull();
-            // Verifica se o objeto tem as propriedades esperadas
-            var responseObj = response as dynamic;
-            responseObj.Should().NotBeNull();
 
             _mockService.Verify(x => x.SimularAntecipacaoAsync(valor), Times.Once);
         }

@@ -21,7 +21,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = 1000m,
-                DataSolicitacao = DateTime.UtcNow
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1)
             };
 
             // Act
@@ -43,7 +43,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = valor,
-                DataSolicitacao = DateTime.UtcNow
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1)
             };
 
             // Act
@@ -61,7 +61,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = 1000m,
-                DataSolicitacao = DateTime.UtcNow.AddDays(1)
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1).AddDays(1)
             };
 
             // Act
@@ -79,7 +79,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = 1000m,
-                DataSolicitacao = DateTime.UtcNow
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1)
             };
 
             // Act
@@ -96,7 +96,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = 1000m,
-                DataSolicitacao = DateTime.UtcNow.AddDays(-1)
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1).AddDays(-1)
             };
 
             // Act
@@ -117,7 +117,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = valor,
-                DataSolicitacao = DateTime.UtcNow
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1)
             };
 
             // Act
@@ -134,7 +134,7 @@ namespace Antecipacao.Tests.Application.Validators
             var dto = new CriarSolicitacaoDto
             {
                 ValorSolicitado = 50m, // Valor inválido
-                DataSolicitacao = DateTime.UtcNow.AddDays(1) // Data futura
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1).AddDays(1) // Data futura
             };
 
             // Act

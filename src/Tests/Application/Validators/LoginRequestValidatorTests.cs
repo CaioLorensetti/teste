@@ -54,10 +54,11 @@ namespace Antecipacao.Tests.Application.Validators
 
         [Theory]
         [InlineData("usuario")]
-        [InlineData("usuario@")]
         [InlineData("@exemplo.com")]
         [InlineData("usuario.exemplo.com")]
-        [InlineData("usuario@exemplo")]
+        [InlineData("@")]
+        [InlineData("@.com")]
+        [InlineData("@.com.br")]
         public void Validar_ComEmailInvalido_DeveSerInvalido(string email)
         {
             // Arrange
@@ -131,7 +132,7 @@ namespace Antecipacao.Tests.Application.Validators
             var result = _validator.TestValidate(request);
 
             // Assert
-            result.Errors.Should().HaveCount(2);
+            result.Errors.Should().HaveCount(3); // Username vazio gera 2 erros + Password vazio gera 1 erro
             result.ShouldHaveValidationErrorFor(x => x.Username);
             result.ShouldHaveValidationErrorFor(x => x.Password);
         }

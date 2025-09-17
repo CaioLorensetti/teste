@@ -11,7 +11,7 @@ namespace Antecipacao.Tests.TestUtilities
             return new CriarSolicitacaoRequest
             {
                 ValorSolicitado = valor,
-                DataSolicitacao = DateTime.UtcNow
+                DataSolicitacao = DateTime.UtcNow.AddMinutes(-1) // Garantir que não é futuro
             };
         }
 
