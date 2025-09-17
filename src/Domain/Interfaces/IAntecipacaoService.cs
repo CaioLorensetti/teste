@@ -4,7 +4,7 @@ namespace Antecipacao.Domain.Interfaces
 {
     public interface IAntecipacaoService
     {
-        Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(CriarSolicitacaoDto dto);
+        Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(long creatorId, CriarSolicitacaoRequest request);
         Task<IEnumerable<MinhaSolicitacaoResponseDto>> ListarPorCreatorAsync(long creatorId);
         Task<MinhaSolicitacaoResponseDto> AprovarAsync(Guid guidId);
         Task<MinhaSolicitacaoResponseDto> RecusarAsync(Guid guidId);
