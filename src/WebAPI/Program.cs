@@ -6,6 +6,8 @@ using Antecipacao.WebAPI.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
+ConfigurarVersionamento(builder.Services);
 ConfigurarSwagger(builder.Services);
 
 // Services
@@ -44,8 +47,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Antecipação API Documentation");
-        options.DocumentTitle = "Antecipação API Documentation";
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Antecipação API v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Antecipação API v2");
+        options.DocumentTitle = "Antecipação API - Documentação Completa";
         options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
         options.RoutePrefix = "swagger";
     });
@@ -71,13 +75,47 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<Antecipacao.Infrastructure.Data.AntecipacaoDbContext>();
     context.Database.EnsureCreated();
-    
+
     // Seed admin user
     var seedDataService = scope.ServiceProvider.GetRequiredService<Antecipacao.Infrastructure.Data.SeedDataService>();
     await seedDataService.SeedAdminUserAsync();
 }
 
 app.Run();
+
+static void ConfigurarVersionamento(IServiceCollection services)
+{
+    services.AddApiVersioning(options =>
+    {
+        // Define a versão padrão da API
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+
+        // Assume a versão padrão quando não especificada
+        options.AssumeDefaultVersionWhenUnspecified = true;
+
+        // Define como a versão será lida (Header, Query String, URL Path, etc.)
+        options.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),           // /api/v1/controller
+            new QueryStringApiVersionReader("version"), // ?version=1.0
+            new HeaderApiVersionReader("X-Api-Version") // Header: X-Api-Version: 1.0
+        );
+
+        // Estratégia para reportar versões suportadas
+        options.ApiVersionSelector = new CurrentImplementationApiVersionSelector(options);
+        
+        // Configuração para reportar versões suportadas
+        options.ReportApiVersions = true;
+    })
+    .AddApiExplorer(options =>
+    {
+        // Configuração para o ApiExplorer (usado pelo Swagger)
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    })
+    .AddMvc();
+
+    services.AddEndpointsApiExplorer();
+}
 
 static void ConfigurarAutenticacaoJwt(IServiceCollection services, JwtSettings configuracoesJwt)
 {
@@ -102,7 +140,7 @@ static void ConfigurarAutenticacaoJwt(IServiceCollection services, JwtSettings c
             ClockSkew = TimeSpan.Zero
         };
     });
-    
+
     services.AddAuthorization(options =>
     {
         options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
@@ -121,6 +159,24 @@ static void ConfigurarSwagger(IServiceCollection services)
             Version = "v1",
             Description = "API para sistema de antecipação de recebíveis"
         });
+        
+        c.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Antecipação API",
+            Version = "v2",
+            Description = "API para sistema de antecipação de recebíveis - Versão 2"
+        });
+
+        // Configuração para resolver conflitos de rotas duplicadas
+        c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+
+        // Configuração para incluir comentários XML (opcional)
+        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
+        }
 
         c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
