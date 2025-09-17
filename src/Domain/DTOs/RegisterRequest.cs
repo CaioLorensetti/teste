@@ -4,8 +4,8 @@ namespace Antecipacao.Domain.DTOs
 {
     public class RegisterRequest
     {
-        public string Username { get; set; } = string.Empty; // Email válido e único
+        public string Fullname { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public UserRole Role { get; set; } = UserRole.User; // Padrão para User
     }
 }

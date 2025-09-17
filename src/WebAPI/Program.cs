@@ -33,6 +33,7 @@ ConfigurarSwagger(builder.Services);
 // Services
 builder.Services.AddScoped<IAntecipacaoService, AntecipacaoService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<Antecipacao.Infrastructure.Data.SeedDataService>();
 
 var app = builder.Build();
 
@@ -65,11 +66,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Ensure database is created
+// Ensure database is created and seed admin user
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<Antecipacao.Infrastructure.Data.AntecipacaoDbContext>();
     context.Database.EnsureCreated();
+    
+    // Seed admin user
+    var seedDataService = scope.ServiceProvider.GetRequiredService<Antecipacao.Infrastructure.Data.SeedDataService>();
+    await seedDataService.SeedAdminUserAsync();
 }
 
 app.Run();
@@ -98,7 +103,12 @@ static void ConfigurarAutenticacaoJwt(IServiceCollection services, JwtSettings c
         };
     });
     
-    services.AddAuthorization();
+    services.AddAuthorization(options =>
+    {
+        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+        options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+        options.AddPolicy("UserOrAdmin", policy => policy.RequireRole("User", "Admin"));
+    });
 }
 
 static void ConfigurarSwagger(IServiceCollection services)

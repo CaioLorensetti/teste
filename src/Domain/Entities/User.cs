@@ -9,7 +9,8 @@ namespace Antecipacao.Domain.Entities
     public class User
     {
         public long Id { get; set; }
-        public string Username { get; set; } // Email válido e único
+        public string Fullname { get; set; }
+        public string Username { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
         public UserRole Role { get; set; }

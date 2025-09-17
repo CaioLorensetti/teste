@@ -92,7 +92,7 @@ namespace Antecipacao.WebAPI.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> Logout()
         {
             var tokenRefresh = Request.Cookies["refreshToken"];
