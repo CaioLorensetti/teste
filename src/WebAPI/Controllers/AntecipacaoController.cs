@@ -1,5 +1,6 @@
 using Antecipacao.Domain.DTOs;
 using Antecipacao.Domain.Interfaces;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -7,7 +8,9 @@ using System.Security.Claims;
 namespace Antecipacao.WebAPI.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [ApiVersion("1.0", Deprecated = true)]
+    [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class AntecipacaoController : ControllerBase
     {
         private readonly IAntecipacaoService _servicoAntecipacao;
@@ -29,6 +32,7 @@ namespace Antecipacao.WebAPI.Controllers
 
         [HttpPost]
         [Authorize(Policy = "UserOnly")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> CriarSolicitacao(
             [FromBody] CriarSolicitacaoRequest request)
         {
@@ -55,6 +59,7 @@ namespace Antecipacao.WebAPI.Controllers
 
         [HttpGet("minhas-solicitacoes")]
         [Authorize(Policy = "UserOnly")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<IEnumerable<MinhaSolicitacaoResponseDto>>> ListarMinhasSolicitacoes()
         {
             try
@@ -71,6 +76,7 @@ namespace Antecipacao.WebAPI.Controllers
 
         [HttpPut("{guidId}/aprovar")]
         [Authorize(Policy = "AdminOnly")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> AprovarSolicitacao(Guid guidId)
         {
             try
@@ -86,6 +92,7 @@ namespace Antecipacao.WebAPI.Controllers
 
         [HttpPut("{guidId}/recusar")]
         [Authorize(Policy = "AdminOnly")]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> RecusarSolicitacao(Guid guidId)
         {
             try
@@ -99,8 +106,30 @@ namespace Antecipacao.WebAPI.Controllers
             }
         }
 
+        [HttpGet("admin/solicitacoes-usuario/{userId}")]
+        [Authorize(Policy = "AdminOnly")]
+        [MapToApiVersion("1.0")]
+        public async Task<ActionResult<IEnumerable<MinhaSolicitacaoResponseDto>>> ListarSolicitacoesPorUsuario(long userId)
+        {
+            try
+            {
+                var solicitacoes = await _servicoAntecipacao.ListarPorCreatorAsync(userId);
+                return Ok(solicitacoes);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { erro = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Simula uma antecipação de recebíveis
+        /// </summary>
+        /// <param name="valor">Valor para simulação</param>
+        /// <returns>Resultado da simulação</returns>
         [HttpGet("simular")]
         [AllowAnonymous]
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<SimulacaoDto>> SimularAntecipacao([FromQuery] decimal valor)
         {
             try
@@ -114,18 +143,38 @@ namespace Antecipacao.WebAPI.Controllers
             }
         }
 
-        [HttpGet("admin/solicitacoes-usuario/{userId}")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<IEnumerable<MinhaSolicitacaoResponseDto>>> ListarSolicitacoesPorUsuario(long userId)
+        /// <summary>
+        /// Simula uma antecipação de recebíveis com informações adicionais
+        /// </summary>
+        /// <param name="valor">Valor para simulação</param>
+        /// <returns>Resultado da simulação com informações estendidas</returns>
+        [HttpGet("simular", Name = "SimularV2")]
+        [AllowAnonymous]
+        [MapToApiVersion("2.0")]
+        public async Task<ActionResult<object>> SimularAntecipacaoV2([FromQuery] decimal valor)
         {
             try
             {
-                var solicitacoes = await _servicoAntecipacao.ListarPorCreatorAsync(userId);
-                return Ok(solicitacoes);
+                var simulacao = await _servicoAntecipacao.SimularAntecipacaoAsync(valor);
+
+                var simulacaoV2 = new
+                {
+                    simulacao.ValorSolicitado,
+                    simulacao.ValorLiquido,
+                    simulacao.TaxaAplicada,
+                    DataSimulacao = DateTime.UtcNow,
+                    Avisos = new[]
+                    {
+                        "Analise o impacto no fluxo de caixa antes de prosseguir",
+                        "Simulação válida por 24 horas"
+                    }
+                };
+
+                return Ok(simulacaoV2);
             }
             catch (ArgumentException ex)
             {
-                return NotFound(new { erro = ex.Message });
+                return BadRequest(new { erro = ex.Message });
             }
         }
     }
