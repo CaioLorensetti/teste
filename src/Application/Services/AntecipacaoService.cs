@@ -15,21 +15,23 @@ namespace Antecipacao.Application.Services
             _repositorioSolicitacao = repositorioSolicitacao;
         }
 
-        public async Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(CriarSolicitacaoDto dto)
+        public async Task<MinhaSolicitacaoResponseDto> CriarSolicitacaoAsync(long creatorId, CriarSolicitacaoRequest request)
         {
+            var dto = MapearAntecipacaoRequestDto(request);
+            dto.IdCriador = creatorId;
             ValidarValorMinimo(dto.ValorSolicitado);
             await ValidarSolicitacaoPendente(dto.IdCriador);
 
             var solicitacao = CriarNovaSolicitacao(dto);
             await SalvarSolicitacao(solicitacao);
 
-            return MapearResponseDto(solicitacao);
+            return MapearMinhaSolicitacaoResponseDto(solicitacao);
         }
 
         public async Task<IEnumerable<MinhaSolicitacaoResponseDto>> ListarPorCreatorAsync(long idCreator)
         {
             var solicitacoes = await _repositorioSolicitacao.ListarPorCreatorAsync(idCreator);
-            return solicitacoes.Select(MapearResponseDto);
+            return solicitacoes.Select(MapearMinhaSolicitacaoResponseDto);
         }
 
         public async Task<MinhaSolicitacaoResponseDto> AprovarAsync(Guid guidId)
@@ -38,7 +40,7 @@ namespace Antecipacao.Application.Services
             solicitacao.Aprovar();
             await _repositorioSolicitacao.SaveChangesAsync();
 
-            return MapearResponseDto(solicitacao);
+            return MapearMinhaSolicitacaoResponseDto(solicitacao);
         }
 
         public async Task<MinhaSolicitacaoResponseDto> RecusarAsync(Guid guidId)
@@ -47,7 +49,7 @@ namespace Antecipacao.Application.Services
             solicitacao.Recusar();
             await _repositorioSolicitacao.SaveChangesAsync();
 
-            return MapearResponseDto(solicitacao);
+            return MapearMinhaSolicitacaoResponseDto(solicitacao);
         }
 
         public Task<SimulacaoDto> SimularAntecipacaoAsync(decimal valor)
@@ -104,7 +106,7 @@ namespace Antecipacao.Application.Services
             };
         }
 
-        private static MinhaSolicitacaoResponseDto MapearResponseDto(SolicitacaoAntecipacao solicitacao)
+        private static MinhaSolicitacaoResponseDto MapearMinhaSolicitacaoResponseDto(SolicitacaoAntecipacao solicitacao)
         {
             return new MinhaSolicitacaoResponseDto
             {
@@ -116,6 +118,15 @@ namespace Antecipacao.Application.Services
                 Status = solicitacao.Status.ToString(),
                 DataAprovacao = solicitacao.DataAprovacao,
                 DataRecusa = solicitacao.DataRecusa
+            };
+        }
+
+        private static CriarSolicitacaoDto MapearAntecipacaoRequestDto(CriarSolicitacaoRequest solicitacao)
+        {
+            return new CriarSolicitacaoDto
+            {
+                ValorSolicitado = solicitacao.ValorSolicitado,
+                DataSolicitacao = solicitacao.DataSolicitacao
             };
         }
     }

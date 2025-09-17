@@ -30,14 +30,13 @@ namespace Antecipacao.WebAPI.Controllers
         [HttpPost]
         [Authorize(Policy = "UserOnly")]
         public async Task<ActionResult<MinhaSolicitacaoResponseDto>> CriarSolicitacao(
-            [FromBody] CriarSolicitacaoDto dto)
+            [FromBody] CriarSolicitacaoRequest request)
         {
             try
             {
                 var idUsuario = ObterIdUsuarioAtual();
-                dto.IdCriador = idUsuario;
 
-                var solicitacaoCriada = await _servicoAntecipacao.CriarSolicitacaoAsync(dto);
+                var solicitacaoCriada = await _servicoAntecipacao.CriarSolicitacaoAsync(idUsuario, request);
                 return CreatedAtAction(nameof(CriarSolicitacao), new { guidId = solicitacaoCriada.GuidId }, solicitacaoCriada);
             }
             catch (UnauthorizedAccessException ex)
