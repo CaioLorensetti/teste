@@ -203,3 +203,6 @@ static void ConfigurarSwagger(IServiceCollection services)
         });
     });
 }
+
+// Expor a classe Program para testes
+public partial class Program { }
